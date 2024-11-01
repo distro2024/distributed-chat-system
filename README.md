@@ -1,4 +1,4 @@
-# Distributed Chat System
+# Distributed Chat System 
 
 A brief introductory text here. Perhaps main project links
 - Documentation
