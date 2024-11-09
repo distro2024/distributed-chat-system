@@ -8,13 +8,36 @@ The justification for such an implementation is that in today's world, we all li
 
 ## Techical overview
 
-The system under design provides a chat application for end users. When users launch the application to initiate a chat discussion, the client application becomes one of the nodes in the distributed chat system. We are still considering various approaches for node participation. Nodes could either join a shared discussion, connect to random discussions, or allow end users to choose whether to start a new discussion or join an existing group discussion. The system includes a "node director" responsible for connecting nodes to each other.
+The system under design provides a chat application for end users. When users launch the application to initiate a chat discussion, the client application becomes one of the nodes in the distributed chat system. The system includes a "node director" responsible for connecting nodes to each other. In this proof-of-concept version all nodes participate in the same discussion.
+
+### Joining group discussion
+
+When a new new node wants to join the discussion, node director gives provides the new node the contact information for all nodes participating in the discussion. Either the node director or the joining node then inform the nodes already in the discussion about the new node. The team will consider the resilience and recovery of the node director as well to ensure that the system under design has desired level of fault tolerance in cases where the node director is compromised. 
+
 
 ![three nodes and a node director](./img/work-plan-01.jpg)
 
-The nodes will employ a message brokering mechanism that enables them to pass chat messages to each other efficiently. Additionally, there will be a system to ensure that messages are ordered in a predefined manner. Mechanisms will also be in place to handle situations where nodes join or leave the discussion and to resolve any discrepancies in discussion histories among nodes.
+### Sending and receiving messages
 
-The chat nodes will be implemented using Node.js, while the "node director" will be developed in Python. This dual-technology approach aims to study systems where different components are built with different technologies and to explore the asynchronous communication features of both Node.js and Python.
+The nodes will send chat messages to all other nodes in the group discussion. The team will investigate a mechanism for transferring chat messages to each other efficiently. The idea is to implement or mimic multicast functionality that works also when the nodes are in different networks. As a starting point, the team investigates using websockets for inter-node communication. As communication between nodes is direct node-to-node discussion, no middleware is required in this proof-of-concept phase. 
+
+### Consistency in discussion 
+
+Additionally, there will be a system to ensure that messages are ordered in a predefined manner. As a starting point the team will investigate implementing vector clocks. 
+
+### Joining and leaving the group discussion
+
+Mechanisms will also be in place to handle situations where nodes join or leave the discussion and to resolve any discrepancies in discussion histories among nodes. The team will investigate different coordination and leader election strategies and consider implementing a coordinator role to provide needed services to the connected nodes. One role of the elected coordinator is to provide new joining nodes a replica of the current state of the group discussion. 
+
+### Language
+
+The chat nodes and the node director will be implemented using Node.js. Node.js has a strong reputation in handling asynchronous calls, which the team considers to be a critical functionality for the system under design. 
+
+### No persistent storage
+
+As the motivation is to built a system for group discussions without any persistent memory, no database is necessary for this proof-of-concept. Once all client applications shut down, the discussion is lost forever.
+
+### Container technology
 
 All nodes will reside within containers, which may or may not be located on the same physical machine. This containerized approach ensures flexibility, scalability, and ease of deployment across different environments.
 
