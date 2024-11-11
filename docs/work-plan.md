@@ -30,7 +30,7 @@ The Node Director has two primary functions: it directs clients to the current l
 
 ### Consistency in discussion 
 
-Additionally, there will be a system to ensure that messages are ordered in a predefined manner. As a starting point the team will investigate implementing vector clocks. 
+To ensure message consistency in our distributed chat system, our team implements vector clocks for reliable sequencing across nodes without the need for centralized synchronization. Each node is equipped with a vector clock that meticulously tracks the events it processes. Whenever a node sends a message, it first increments its clock, embedding this updated information within the message itself. Upon receipt, a node merges its vector clock with that of the sender, harmonizing both histories. This methodological merging not only maintains historical accuracy but also aids in identifying causal relationships and resolving potential conflicts, thereby supporting our system's scalable and efficient message ordering.
 
 ### Joining and leaving the group discussion
 
