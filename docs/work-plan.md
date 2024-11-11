@@ -24,7 +24,7 @@ The nodes will send chat messages to all other nodes in the group discussion. Th
 ### Node director
 The Node Director has one primary function: when a client connects to the director, the director redirects the client to the current leader's server. The leader notifies the director of its presence every few seconds. Therefore, the director includes two endpoints:
 
-`POST /register_leader` the director receives the leader's ID and public address.
+`POST /register_leader` the director receives the leader's ID and public address.</br>
 `GET /` redirects the client to the current leader's server.
 
 ### Consistency in discussion 
