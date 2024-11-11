@@ -1,64 +1,49 @@
 const express = require('express');
 const axios = require('axios');
-const cors = require('cors');
 const http = require('http');
-const path = require('path');
 const { v4: uuidv4 } = require('uuid');
+const path = require('path');
 
-const NODE_SERVER_PORT = process.env.PORT || 4000;
-const NODE_HOST = process.env.NODE_HOST || 'localhost';
-const PUBLIC_HOST = process.env.PUBLIC_HOST || 'localhost';
+const PORT = process.env.PORT || 4000;
 const DIRECTOR_URL = process.env.DIRECTOR_URL || 'http://localhost:3000';
+const NODE_HOST = process.env.NODE_HOST || `http://localhost:${PORT}`;
+const PUBLIC_HOST = process.env.PUBLIC_HOST || `http://localhost:${PORT}`;
 
-const nodeId = uuidv4();
+// Using IS_LEADER environment variable to simulate leader election
+const IS_LEADER = process.env.IS_LEADER === "true";
 
 const app = express();
-
-app.use(cors());
 const server = http.createServer(app);
 
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json());
 
-async function registerNode() {
+const nodeId = uuidv4();
+
+// For now, node1 is always the leader based on the IS_LEADER environment variable
+let isLeader = IS_LEADER; // testing
+let leaderId = IS_LEADER ? nodeId : null;
+let leaderAddress = IS_LEADER ? NODE_HOST : null;
+let leaderPublicAddress = IS_LEADER ? PUBLIC_HOST : null;
+
+const sendHeartbeatToDirector = async () => {
+  if (isLeader) {
     try {
-      const internalAddress = `http://${NODE_HOST}:${NODE_SERVER_PORT}`;
-      const publicAddress = `http://${PUBLIC_HOST}:${NODE_SERVER_PORT}`;
-  
-      await axios.post(`${DIRECTOR_URL}/register_node`, {
-        nodeId,
-        internalAddress,
-        publicAddress
-      });
-      console.log(`Registered node with id, ${nodeId}, internal address ${internalAddress}, public address ${publicAddress}`);
+      await axios.post(`${DIRECTOR_URL}/register_leader`, { leaderId, leaderAddress, leaderPublicAddress });
+      console.log('Heartbeat sent to Director');
     } catch (error) {
-      console.error('Error registering node:', error);
+      console.error('Error sending heartbeat to Director:', error.message);
+      isLeader = false;
+      // TOOD initiateElection();
     }
   }
+};
 
-setInterval(async () => {
-    try {
-      await axios.post(`${DIRECTOR_URL}/heartbeat`, { nodeId });
-    } catch (error) {
-      console.error('Error sending heartbeat:', error);
-    }
-  }, 5000);
+setInterval(sendHeartbeatToDirector, 5000);
 
-async function connectToPeers() {
-    try {
-        const res = await axios.get(`${DIRECTOR_URL}/active_nodes`);
-        const activeNodes = res.data;
-
-        // TODO: Connect to each peer and use socket.io to communicate
-
-    } catch (error) {
-    }
-}
-
-(async () => {
-    await registerNode();
-    server.listen(NODE_SERVER_PORT, () => {
-      console.log(`Node is running on port ${NODE_SERVER_PORT}`);
-    });
-    await connectToPeers();
-    setInterval(connectToPeers, 10000);
-  })();
+server.listen(PORT, () => {
+  console.log(`Node service is running on port ${PORT}`);
+  if (!leaderId) {
+    // TODO initiateElection();
+  }
+});

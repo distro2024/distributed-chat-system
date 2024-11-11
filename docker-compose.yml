@@ -4,6 +4,8 @@ services:
     build:
       context: ./director
       dockerfile: Dockerfile
+    environment:
+      - PORT=3000
     ports:
       - "3000:3000"
     networks:
@@ -17,8 +19,9 @@ services:
     environment:
       - PORT=4000
       - DIRECTOR_URL=http://172.30.0.2:3000
+      - PUBLIC_HOST=http://localhost:4000
       - NODE_HOST=172.30.0.3
-      - PUBLIC_HOST=localhost
+      - IS_LEADER=true
     depends_on:
       - director
     ports:
@@ -34,8 +37,9 @@ services:
     environment:
       - PORT=4001
       - DIRECTOR_URL=http://172.30.0.2:3000
+      - PUBLIC_HOST=http://localhost:4001
       - NODE_HOST=172.30.0.4
-      - PUBLIC_HOST=localhost
+      - IS_LEADER=false
     depends_on:
       - director
     ports:
@@ -51,8 +55,9 @@ services:
     environment:
       - PORT=4002
       - DIRECTOR_URL=http://172.30.0.2:3000
+      - PUBLIC_HOST=http://localhost:4002
       - NODE_HOST=172.30.0.5
-      - PUBLIC_HOST=localhost
+      - IS_LEADER=false
     depends_on:
       - director
     ports:
