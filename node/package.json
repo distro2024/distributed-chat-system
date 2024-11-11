@@ -1,0 +1,16 @@
+{
+    "name": "node",
+    "version": "1.0.0",
+    "description": "",
+    "main": "node.js",
+    "scripts": {
+      "start": "node node.js"
+    },
+    "dependencies": {
+      "axios": "^0.21.1",
+      "express": "^4.17.1",
+      "socket.io": "^4.0.1",
+      "uuid": "^8.3.2"
+    }
+  }
+  

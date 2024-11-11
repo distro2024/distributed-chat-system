@@ -1,0 +1,12 @@
+{
+    "name": "director",
+    "version": "1.0.0",
+    "description": "",
+    "main": "director.js",
+    "scripts": {
+        "start": "node director.js"
+    },
+    "dependencies": {
+        "express": "^4.17.1"
+    }
+}
