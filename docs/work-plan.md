@@ -21,6 +21,12 @@ When a new new node wants to join the discussion, node director gives provides t
 
 The nodes will send chat messages to all other nodes in the group discussion. The team will investigate a mechanism for transferring chat messages to each other efficiently. The idea is to implement or mimic multicast functionality that works also when the nodes are in different networks. As a starting point, the team investigates using websockets for inter-node communication. As communication between nodes is direct node-to-node discussion, no middleware is required in this proof-of-concept phase. 
 
+### Node director
+The Node Director has one primary function: when a client connects to the director, the director redirects the client to the current leader's server. The leader notifies the director of its presence every few seconds. Therefore, the director includes two endpoints:
+
+`POST /register_leader` the director receives the leader's ID and public address.
+`GET /` redirects the client to the current leader's server.
+
 ### Consistency in discussion 
 
 Additionally, there will be a system to ensure that messages are ordered in a predefined manner. As a starting point the team will investigate implementing vector clocks. 
