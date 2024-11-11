@@ -26,6 +26,15 @@ let leaderId = IS_LEADER ? nodeId : null;
 let leaderAddress = IS_LEADER ? NODE_HOST : null;
 let leaderPublicAddress = IS_LEADER ? PUBLIC_HOST : null;
 
+let nodes = [];
+
+app.post('/register_node', (req, res) => {
+  const { nodeId, nodeAddress, publicAddress } = req.body;
+  nodes.push({ nodeId, nodeAddress, publicAddress });
+  console.log(`Leader received registration from node: ${nodeId}, internal address ${nodeAddress}, public address ${publicAddress}`);
+  res.sendStatus(200);
+});
+
 const sendHeartbeatToDirector = async () => {
   if (isLeader) {
     try {
@@ -38,6 +47,21 @@ const sendHeartbeatToDirector = async () => {
     }
   }
 };
+
+const registerWithDirector = async () => {
+  try {
+      await axios.post(`${DIRECTOR_URL}/register_node`, { nodeId, nodeAddress: NODE_HOST, publicAddress: PUBLIC_HOST });
+      console.log('Registered with director');
+  } catch (error) {
+      console.error('Error registering with director:', error.message);
+  }
+};
+
+if (isLeader) {
+  sendHeartbeatToDirector();
+}
+
+registerWithDirector();
 
 setInterval(sendHeartbeatToDirector, 5000);
 
