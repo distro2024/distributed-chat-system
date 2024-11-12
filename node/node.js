@@ -52,7 +52,7 @@ const sendHeartbeatToDirector = async () => {
     } catch (error) {
       console.error("Error sending heartbeat to Director:", error.message)
       isLeader = false
-      // TOOD initiateElection();
+      initiateElection()
     }
   }
 }
@@ -74,12 +74,17 @@ const registerWithDirector = async () => {
  * Send a message to all nodes to elect a new coordinator
  * @param {ChatNode} chatNode - The chat node instance for this client
  */
-const callForElection = async (chatNode) => {
-  chatNode.nodes.forEach((node) => {
+const initiateElection = async () => {
+  nodes.forEach((node) => {
     // Sends a message through a web socket to a node
     // requesting a vote for a new coordinator
-    // Web socket will be implemented in the future
+    axios.post(`${node.nodeAddress}/election`, {
+      id: nodeId,
+    })
   })
+  // Wait for three seconds to receive votes from other nodes
+  setTimeout(determineVotingOutcome, 3000)
+  determineVotingOutcome()
 }
 
 /**
@@ -88,6 +93,8 @@ const callForElection = async (chatNode) => {
  * @param {any} node - The node that sent the vote
  */
 const submitVote = async (node) => {
+  // TODO: how to handle multiple votes from the same node?
+  // TODO: how to listen to incoming messages to different routes
   this.electionVotes.push(node.id)
 }
 
@@ -105,11 +112,15 @@ const determineVotingOutcome = async () => {
     this.isCoordinator = true
     // send a message to all nodes to update their coordinator
     nodes.forEach((node) => {
-      // Sends a message through a web socket to a node
-      // requesting an update to the coordinator
+      axios.post(`${node.nodeAddress}/update-coordinator`, {
+        id: nodeId,
+      })
     })
   } else {
     // send a message to the winner to initate a new election
+    axios.post(`${winner.nodeAddress}/initiate-election`, {
+      id: nodeId,
+    })
   }
 }
 
