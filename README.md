@@ -1,7 +1,7 @@
 # Distributed Chat System 
 
 A brief introductory text here. Perhaps main project links
-- Documentation
+- [Work Plan](./docs/work-plan.md)
 - Definition of Done(?)
 
 
