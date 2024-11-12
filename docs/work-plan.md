@@ -21,9 +21,16 @@ When a new new node wants to join the discussion, node director gives provides t
 
 The nodes will send chat messages to all other nodes in the group discussion. The team will investigate a mechanism for transferring chat messages to each other efficiently. The idea is to implement or mimic multicast functionality that works also when the nodes are in different networks. As a starting point, the team investigates using websockets for inter-node communication. As communication between nodes is direct node-to-node discussion, no middleware is required in this proof-of-concept phase. 
 
+### Node director
+The Node Director has two primary functions: it directs clients to the current leader's server and keeps information about the leader. When a client connects to the director, they are redirected to the leader’s server. To ensure continuity, the leader notifies the director of its presence every few seconds, allowing the director to stay up-to-date on the current leader. To support these functions, the director provides three endpoints:
+
+`GET /` Redirects the client to the current leader's server.</br>
+`POST /register_leader` The director receives the leader's ID, internal address and public address.</br>
+`POST /register_node` The director receives a new node's ID, internal address and public address, then forwards this information to the leader.
+
 ### Consistency in discussion 
 
-Additionally, there will be a system to ensure that messages are ordered in a predefined manner. As a starting point the team will investigate implementing vector clocks. 
+To ensure message consistency in our distributed chat system, our team implements vector clocks for reliable sequencing across nodes without the need for centralized synchronization. Each node is equipped with a vector clock that meticulously tracks the events it processes. Whenever a node sends a message, it first increments its clock, embedding this updated information within the message itself. Upon receipt, a node merges its vector clock with that of the sender, harmonizing both histories. This methodological merging not only maintains historical accuracy but also aids in identifying causal relationships and resolving potential conflicts, thereby supporting our system's scalable and efficient message ordering.
 
 ### Joining and leaving the group discussion
 
