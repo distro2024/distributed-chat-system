@@ -4,13 +4,17 @@
     "description": "",
     "main": "node.js",
     "scripts": {
-      "start": "node node.js"
+        "start": "node node.js"
     },
     "dependencies": {
-      "axios": "^0.21.1",
-      "express": "^4.17.1",
-      "socket.io": "^4.0.1",
-      "uuid": "^8.3.2"
+        "axios": "^0.21.1",
+        "express": "^4.17.1",
+        "socket.io": "^4.0.1",
+        "uuid": "^8.3.2"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.14.0",
+        "eslint": "^9.14.0",
+        "globals": "^15.12.0"
     }
-  }
-  
+}
