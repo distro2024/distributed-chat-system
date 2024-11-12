@@ -5,13 +5,15 @@
  *
  */
 class ChatNode {
+  #id
   #messages
   #coordinator
   #nodes
   #electionVotes
 
-  constructor() {
+  constructor(id, nodes) {
     // List of chat nodes in the group
+    this.id = id
     this.#nodes = []
     // Current state of the chat discussion
     this.#messages = []
