@@ -29,13 +29,7 @@ Mechanisms will be in place to handle situations where nodes join or leave the d
 
 - Maintains an up-to-date record of nodes in the discussion.
 - Assists new nodes in joining the discussion by providing them with a replica of the current state of the group discussion and the addresses of all nodes in the discussion.
-- Keeps in contact with the node director to ensure the node director is aware of the current coordinator node and performs health checks on the node director.
-
-### Joining group discussion
-
-When a new node wants to join the chat, it connects first to the director node with a known name. The director node directs it to a coordinator node, which gives two neighbour nodes to exchange messages with. Now the new node is ready for multicasting new messages to its neighbours and to receive messages from them.
-
-![Joining group discussion](./img/work-plan-02.jpg)
+- Keeps in contact with the node director to ensure the node director is aware of the current coordinator node and performs health checks on the node director.  
 
 ### Node director
 The Node Director has two primary functions: it directs clients to the current leader's server and keeps information about the leader. When a client connects to the director, they are redirected to the leader’s server. To ensure continuity, the leader notifies the director of its presence every few seconds, allowing the director to stay up-to-date on the current leader. To support these functions, the director provides three endpoints:
@@ -43,6 +37,12 @@ The Node Director has two primary functions: it directs clients to the current l
 `GET /` Redirects the client to the current leader's server.</br>
 `POST /register_leader` The director receives the leader's ID, internal address and public address.</br>
 `POST /register_node` The director receives a new node's ID, internal address and public address, then forwards this information to the leader.
+
+### Joining group discussion
+
+When a new node wants to join the chat, it connects first to the director node with a known name. The director node directs it to a coordinator node, which gives two neighbour nodes to exchange messages with. Now the new node is ready for multicasting new messages to its neighbours and to receive messages from them.
+
+![Joining group discussion](./img/work-plan-02.jpg)
 
 ### Sending and receiving messages
 
