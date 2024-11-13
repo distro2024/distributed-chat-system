@@ -40,9 +40,11 @@ The Node Director has two primary functions: it directs clients to the current l
 
 The nodes will send chat messages to all other nodes in the group discussion. The team will investigate a mechanism for transferring chat messages to each other efficiently. The idea is to simulate multicast functionality that works also when the nodes are in different networks. As a starting point, the team investigates using websockets and HTTP/2-protocol for inter-node communication. As communication between nodes is direct node-to-node discussion, no middleware is required in this proof-of-concept phase. 
 
-At least the following messages may be handled between nodes (draft version as HTTP/2-request bodies):
+At least the following messages may be handled between nodes (draft version as HTTP/2-request bodies). 
 
-chat-messages: POST `/message/`
+#### Chat messages
+
+Send chat-messages to other nodes: POST `/message/`
 ```json
 { 
     "id": uuid,
@@ -53,24 +55,49 @@ chat-messages: POST `/message/`
 }
 ```
 
-Election message: POST `/election`
+#### Election process
+
+Messages related to the election process with Bully-algorithm:
+
+
+Initiate election: POST `/election`
 ```json
 {
     "node-id": uuid
 }
 ```
 
-Vote submission: POST `/submit-vote`
+Respond to election: POST `/submit-vote`
 ```json
 {
     "vote-for-node": uuid
 }
 ```
 
-Updating coordinator: POST `/update-coordinator`
+Notify other nodes that this node is the new coordinator: POST `/update-coordinator`
 ```json
 {
     "coodinator": uuid
+}
+```
+
+
+#### Communication with coordinator node
+
+The coordinator node can send a message requesting other nodes to update the record of actives nodes in group discussion: POST `/active-nodes`
+```json
+{
+    "node": [uuid]
+}
+```
+
+Any node can get the discussion history from coordinator node: GET `/discussion`
+
+And the coordinator then responds with the discussion: POST `/discussion`
+
+```json
+{
+    "messages": [string] 
 }
 ```
 
