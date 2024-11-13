@@ -47,11 +47,11 @@ At least the following messages may be handled between nodes (draft version as H
 Send chat-messages to other nodes: POST `/message/`
 ```json
 { 
-    "id": uuid,
-    "node-id": uuid,
-    "timestamp": timestamp,
-    "message": string
-    "vector-clock:" [int]
+    "id": "uuid",
+    "node-id": "uuid",
+    "timestamp": "timestamp",
+    "message": "string"
+    "vector-clock:" ["int"]
 }
 ```
 
@@ -63,21 +63,21 @@ Messages related to the election process with Bully-algorithm:
 Initiate election: POST `/election`
 ```json
 {
-    "node-id": uuid
+    "node-id": "uuid"
 }
 ```
 
 Respond to election: POST `/submit-vote`
 ```json
 {
-    "vote-for-node": uuid
+    "vote-for-node": "uuid"
 }
 ```
 
 Notify other nodes that this node is the new coordinator: POST `/update-coordinator`
 ```json
 {
-    "coodinator": uuid
+    "coodinator": "uuid"
 }
 ```
 
@@ -87,7 +87,7 @@ Notify other nodes that this node is the new coordinator: POST `/update-coordina
 The coordinator node can send a message requesting other nodes to update the record of actives nodes in group discussion: POST `/active-nodes`
 ```json
 {
-    "node": [uuid]
+    "node": ["uuid"]
 }
 ```
 
@@ -97,7 +97,15 @@ And the coordinator then responds with the discussion: POST `/discussion`
 
 ```json
 {
-    "messages": [string] 
+    "messages": [
+        { 
+            "id": "uuid",
+            "node-id": "uuid",
+            "timestamp": "timestamp",
+            "message": "string"
+            "vector-clock:" ["int"]
+        }
+    ] 
 }
 ```
 
