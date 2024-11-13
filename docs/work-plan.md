@@ -23,6 +23,14 @@ Terminology:
 
 ![Basic case](./img/basic_case.png)
 
+### Coordinator node
+
+Mechanisms will be in place to handle situations where nodes join or leave the discussion and to resolve any discrepancies in discussion histories among nodes. The team has chosen to implement a coordinator role and an election process initially based on the bully algorithm. The elected coordinator has several duties. It:
+
+- Maintains an up-to-date record of nodes in the discussion.
+- Assists new nodes in joining the discussion by providing them with a replica of the current state of the group discussion and the addresses of all nodes in the discussion.
+- Keeps in contact with the node director to ensure the node director is aware of the current coordinator node and performs health checks on the node director.
+
 ### Joining group discussion
 
 When a new node wants to join the chat, it connects first to the director node with a known name. The director node directs it to a coordinator node, which gives two neighbour nodes to exchange messages with. Now the new node is ready for multicasting new messages to its neighbours and to receive messages from them.
@@ -112,14 +120,6 @@ The coordinator then responds with the discussion history (a list of message obj
 ### Consistency in discussion 
 
 To ensure message consistency in our distributed chat system, our team implements vector clocks for reliable sequencing across nodes without the need for centralized synchronization. Each node is equipped with a vector clock that meticulously tracks the events it processes. Whenever a node sends a message, it first increments its clock, embedding this updated information within the message itself. Upon receipt, a node merges its vector clock with that of the sender, harmonizing both histories. This methodological merging not only maintains historical accuracy but also aids in identifying causal relationships and resolving potential conflicts, thereby supporting our system's scalable and efficient message ordering.
-
-### Coordinator node
-
-Mechanisms will be in place to handle situations where nodes join or leave the discussion and to resolve any discrepancies in discussion histories among nodes. The team has chosen to implement a coordinator role and an election process initially based on the bully algorithm. The elected coordinator has several duties. It:
-
-- Maintains an up-to-date record of nodes in the discussion.
-- Assists new nodes in joining the discussion by providing them with a replica of the current state of the group discussion and the addresses of all nodes in the discussion.
-- Keeps in contact with the node director to ensure the node director is aware of the current coordinator node and performs health checks on the node director.
 
 ### Language
 
