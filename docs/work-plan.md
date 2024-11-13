@@ -34,23 +34,32 @@ Mechanisms will be in place to handle situations where nodes join or leave the d
 ### Node director
 The Node Director has two primary functions: it directs clients to the current leader's server and keeps information about the leader. When a client connects to the director, they are redirected to the leader’s server. To ensure continuity, the leader notifies the director of its presence every few seconds, allowing the director to stay up-to-date on the current leader. To support these functions, the director provides three endpoints:
 
-`GET /` Redirects the client to the current leader's server.</br>
-`POST /register_leader` The director receives the leader's ID, internal address and public address.</br>
-`POST /register_node` The director receives a new node's ID, internal address and public address, then forwards this information to the leader.
+`GET /` Redirects the client to the current leader's server.  
+`POST /register_leader` The director receives the leader's ID, internal address and public address.  
+`POST /register_node` The director receives a new node's ID, internal address and public address, then forwards this information to the leader.  
+
+<div class="page"/>
 
 ### Joining group discussion
 
 When a new node wants to join the chat, it connects first to the director node with a known name. The director node directs it to a coordinator node, which gives two neighbour nodes to exchange messages with. Now the new node is ready for multicasting new messages to its neighbours and to receive messages from them.
 
-![Joining group discussion](./img/work-plan-02.jpg)
+```mermaid
+flowchart TD
+    A[Node X] --> |wants to join the chat, calls to Director node| B[Director node]
+    B --> |directs the new node to Coordinator node| C[Coordinator node]
+    C --> |gives neighbours to NodeX| D[Now Node X is a part of the chat]
+```
+
+<div class="page"/>
 
 ### Sending and receiving messages
 
-The nodes will send chat messages to all other nodes in the group discussion. The team will investigate a mechanism for transferring chat messages to each other efficiently. The idea is to simulate multicast functionality that works also when the nodes are in different networks. As a starting point, the team investigates using websockets and HTTP/2-protocol for inter-node communication. As communication between nodes is direct node-to-node discussion, no middleware is required in this proof-of-concept phase. 
+The nodes will send chat messages to all other nodes in the group discussion. The team will investigate a mechanism for transferring chat messages to each other efficiently. The idea is to simulate multicast functionality that works also when the nodes are in different networks. As a starting point, the team investigates using websockets and HTTP/2-protocol for inter-node communication. As communication between nodes is direct node-to-node discussion, no middleware is required in this proof-of-concept phase.  
 
 At least the following messages may be handled between nodes (draft version as HTTP/2-request bodies). 
 
-#### Chat messages
+#### Chat messages  
 
 Any node (i.e. chat-node) can send chat-messages to other nodes: POST `/message/`
 ```json
@@ -63,7 +72,7 @@ Any node (i.e. chat-node) can send chat-messages to other nodes: POST `/message/
 }
 ```
 
-#### Election process
+#### Election process  
 
 Messages related to the election process with Bully-algorithm:
 
@@ -81,6 +90,7 @@ Higher priority nodes respond with an OK: POST `/submit-vote`
     "ok": "uuid"
 }
 ```
+<div class="page"/>
 
 Once one of the nodes has bullied other into submission, they notify other nodes that they are the new coordinator: POST `/update-coordinator`
 ```json
@@ -90,7 +100,7 @@ Once one of the nodes has bullied other into submission, they notify other nodes
 ```
 
 
-#### Communication with coordinator node
+#### Communication with coordinator node  
 
 The coordinator node can send a message requesting other nodes to update the record of actives nodes in group discussion after nodes join or leave the discussion: POST `/active-nodes`
 ```json
@@ -121,7 +131,9 @@ The coordinator then responds with the discussion history (a list of message obj
 
 To ensure message consistency in our distributed chat system, our team implements vector clocks for reliable sequencing across nodes without the need for centralized synchronization. Each node is equipped with a vector clock that meticulously tracks the events it processes. Whenever a node sends a message, it first increments its clock, embedding this updated information within the message itself. Upon receipt, a node merges its vector clock with that of the sender, harmonizing both histories. This methodological merging not only maintains historical accuracy but also aids in identifying causal relationships and resolving potential conflicts, thereby supporting our system's scalable and efficient message ordering.
 
-### Language
+<div class="page"/>
+
+### Language selection
 
 The chat nodes and the node director will be implemented using Node.js. Node.js has a strong reputation in handling asynchronous calls, which the team considers to be a critical functionality for the system under design. 
 
