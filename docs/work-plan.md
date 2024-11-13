@@ -1,4 +1,11 @@
-# Work Plan
+# Group Project Work Plan
+
+**Course:** CSM13001 Distributed Systems, University of Helsinki  
+**Members:** Juha Väisänen, Pekka Prökkinen, Ville Hänninen, Heidi Holappa  
+**Group number:** 9  
+
+## Format Clarification
+Please note that this document does not include a cover page as per the guidance from our lecturer. This decision allows us to render the document directly from markdown to PDF for ease of use and consistency.
 
 ## Introduction
 
@@ -8,18 +15,18 @@ The justification for such an implementation is that in today's world, we all li
 
 ## Techical overview
 
-The system under design provides a chat application for end users. When users launch the application to initiate a chat discussion, the client application becomes one of the nodes in the distributed chat system. The system includes a "node director" responsible for connecting nodes to each other. In this proof-of-concept version all nodes participate in the same discussion.
+The system under design provides a chat application for end users. When users launch the application to initiate a chat discussion, the client application becomes one of the **chat-nodes** (later nodes) in the distributed chat system. The system includes a **node director** responsible for connecting nodes to each other. In this proof-of-concept version all nodes participate in the same discussion.
+
+Terminology:
+- **node:** chat-node sends and receives messages from other chat-nodes. Chat-node can also serve as a coordinator for other chat-nodes (detailed later in the document)
+- **node director:** node director connects new chat-nodes into the group discussion. Node director does not participate in chat discussion, but communicates with the coordinator node (detailed later in the document)
 
 ### Joining group discussion
 
-When a new new node wants to join the discussion, node director gives provides the new node the contact information for all nodes participating in the discussion. Either the node director or the joining node then inform the nodes already in the discussion about the new node. The team will consider the resilience and recovery of the node director as well to ensure that the system under design has desired level of fault tolerance in cases where the node director is compromised. 
+When a new new node wants to join the discussion, the node director provides the new node the contact information for all nodes participating in the discussion. Either the node director or the joining node then inform the nodes already in the discussion about the new node. The team will consider the resilience and recovery of the node director as well to ensure that the system under design has desired level of fault tolerance in cases where the node director is compromised. 
 
 
 ![three nodes and a node director](./img/work-plan-01.jpg)
-
-### Sending and receiving messages
-
-The nodes will send chat messages to all other nodes in the group discussion. The team will investigate a mechanism for transferring chat messages to each other efficiently. The idea is to implement or mimic multicast functionality that works also when the nodes are in different networks. As a starting point, the team investigates using websockets for inter-node communication. As communication between nodes is direct node-to-node discussion, no middleware is required in this proof-of-concept phase. 
 
 ### Node director
 The Node Director has two primary functions: it directs clients to the current leader's server and keeps information about the leader. When a client connects to the director, they are redirected to the leader’s server. To ensure continuity, the leader notifies the director of its presence every few seconds, allowing the director to stay up-to-date on the current leader. To support these functions, the director provides three endpoints:
@@ -27,6 +34,44 @@ The Node Director has two primary functions: it directs clients to the current l
 `GET /` Redirects the client to the current leader's server.</br>
 `POST /register_leader` The director receives the leader's ID, internal address and public address.</br>
 `POST /register_node` The director receives a new node's ID, internal address and public address, then forwards this information to the leader.
+
+### Sending and receiving messages
+
+The nodes will send chat messages to all other nodes in the group discussion. The team will investigate a mechanism for transferring chat messages to each other efficiently. The idea is to simulate multicast functionality that works also when the nodes are in different networks. As a starting point, the team investigates using websockets and HTTP/2-protocol for inter-node communication. As communication between nodes is direct node-to-node discussion, no middleware is required in this proof-of-concept phase. 
+
+At least the following messages may be handled between nodes (draft version as HTTP/2-request bodies):
+
+chat-messages: POST `/message/`
+```json
+{ 
+    "id": uuid,
+    "node-id": uuid,
+    "timestamp": timestamp,
+    "message": string
+    "vector-clock:" [int]
+}
+```
+
+Election message: POST `/election`
+```json
+{
+    "node-id": uuid
+}
+```
+
+Vote submission: POST `/submit-vote`
+```json
+{
+    "vote-for-node": uuid
+}
+```
+
+Updating coordinator: POST `/update-coordinator`
+```json
+{
+    "coodinator": uuid
+}
+```
 
 ### Consistency in discussion 
 
@@ -60,3 +105,5 @@ In the meantime, the team can proceed by developing the chat nodes and the node 
 ## Group practices
 
 The team maintains active communication through a group discussion on Telegram. Each weekend, they hold an online call to plan the upcoming week and discuss any current issues. Work items are coordinated using a Kanban-style project board on GitHub, where tasks are tracked as issues. This approach helps the team better estimate workloads, coordinate active tasks, and plan the project's timeline effectively.
+
+TCP piggybag standard look into this 
