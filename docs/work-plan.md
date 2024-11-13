@@ -44,7 +44,7 @@ At least the following messages may be handled between nodes (draft version as H
 
 #### Chat messages
 
-Send chat-messages to other nodes: POST `/message/`
+Any node (i.e. chat-node) can send chat-messages to other nodes: POST `/message/`
 ```json
 { 
     "id": "uuid",
@@ -60,21 +60,21 @@ Send chat-messages to other nodes: POST `/message/`
 Messages related to the election process with Bully-algorithm:
 
 
-Initiate election: POST `/election`
+Any node can initiate election process by sending a request to nodes with higher priority: POST `/election`
 ```json
 {
     "node-id": "uuid"
 }
 ```
 
-Respond to election: POST `/submit-vote`
+Higher priority nodes respond with an OK: POST `/submit-vote`
 ```json
 {
-    "vote-for-node": "uuid"
+    "ok": "uuid"
 }
 ```
 
-Notify other nodes that this node is the new coordinator: POST `/update-coordinator`
+Once one of the nodes has bullied other into submission, they notify other nodes that they are the new coordinator: POST `/update-coordinator`
 ```json
 {
     "coodinator": "uuid"
@@ -84,7 +84,7 @@ Notify other nodes that this node is the new coordinator: POST `/update-coordina
 
 #### Communication with coordinator node
 
-The coordinator node can send a message requesting other nodes to update the record of actives nodes in group discussion: POST `/active-nodes`
+The coordinator node can send a message requesting other nodes to update the record of actives nodes in group discussion after nodes join or leave the discussion: POST `/active-nodes`
 ```json
 {
     "node": ["uuid"]
@@ -93,7 +93,7 @@ The coordinator node can send a message requesting other nodes to update the rec
 
 Any node can get the discussion history from coordinator node: GET `/discussion`
 
-And the coordinator then responds with the discussion: POST `/discussion`
+The coordinator then responds with the discussion history (a list of message objects): POST `/discussion`
 
 ```json
 {
