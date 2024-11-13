@@ -77,9 +77,13 @@ Updating coordinator: POST `/update-coordinator`
 
 To ensure message consistency in our distributed chat system, our team implements vector clocks for reliable sequencing across nodes without the need for centralized synchronization. Each node is equipped with a vector clock that meticulously tracks the events it processes. Whenever a node sends a message, it first increments its clock, embedding this updated information within the message itself. Upon receipt, a node merges its vector clock with that of the sender, harmonizing both histories. This methodological merging not only maintains historical accuracy but also aids in identifying causal relationships and resolving potential conflicts, thereby supporting our system's scalable and efficient message ordering.
 
-### Joining and leaving the group discussion
+### Coordinator node
 
-Mechanisms will also be in place to handle situations where nodes join or leave the discussion and to resolve any discrepancies in discussion histories among nodes. The team will investigate different coordination and leader election strategies and consider implementing a coordinator role to provide needed services to the connected nodes. One role of the elected coordinator is to provide new joining nodes a replica of the current state of the group discussion. 
+Mechanisms will be in place to handle situations where nodes join or leave the discussion and to resolve any discrepancies in discussion histories among nodes. The team has chosen to implement a coordinator role and an election process initially based on the bully algorithm. The elected coordinator has several duties. It:
+
+- Maintains an up-to-date record of nodes in the discussion.
+- Assists new nodes in joining the discussion by providing them with a replica of the current state of the group discussion and the addresses of all nodes in the discussion.
+- Keeps in contact with the node director to ensure the node director is aware of the current coordinator node and performs health checks on the node director.
 
 ### Language
 
@@ -105,5 +109,3 @@ In the meantime, the team can proceed by developing the chat nodes and the node 
 ## Group practices
 
 The team maintains active communication through a group discussion on Telegram. Each weekend, they hold an online call to plan the upcoming week and discuss any current issues. Work items are coordinated using a Kanban-style project board on GitHub, where tasks are tracked as issues. This approach helps the team better estimate workloads, coordinate active tasks, and plan the project's timeline effectively.
-
-TCP piggybag standard look into this 
