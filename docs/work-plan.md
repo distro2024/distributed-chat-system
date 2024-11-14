@@ -61,7 +61,7 @@ The team has outlined the necessary messages for the system currently under desi
 
 #### Chat messages  
 
-Any node (i.e. chat-node) can send chat-messages to other nodes: POST `/message/`
+Any node (i.e. chat-node) can send chat-messages to other nodes: POST `/message`
 ```json
 { 
     "id": "uuid",
@@ -84,7 +84,7 @@ Any node can initiate election process by sending a request to nodes with higher
 }
 ```
 
-Higher priority nodes respond with an OK: POST `/submit-vote`
+Higher priority nodes respond with an OK: POST `/vote`
 ```json
 {
     "ok": "uuid"
@@ -102,7 +102,7 @@ Once one of the nodes has bullied other into submission, they notify other nodes
 
 #### Communication with coordinator node  
 
-The coordinator node can send a message requesting other nodes to update the record of actives nodes in group discussion after nodes join or leave the discussion: POST `/active-nodes`
+The coordinator node can send a message requesting other nodes to update the record of actives nodes in group discussion after nodes join or leave the discussion: POST `/nodes`
 ```json
 {
     "node": ["uuid"]
