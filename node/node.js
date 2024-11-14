@@ -137,6 +137,24 @@ const determineVotingOutcome = async () => {
   } 
 }
 
+/**
+ * NOTE: not yet implemented correctly
+ * Send a response to election request
+ */
+const sendResponse = async () => {
+  // listen to incoming messages to the route /election
+  // this should be implemented with web socket in the future
+  // this is just the basic idea
+  app.post('/election', (req, res) => {
+    const { id } = req.body;
+    // if id is greater than this node's id, send a response
+    // NOTE: does not match the message in work-plan. WIll be fixed in the future
+    res.send({ response: 'ok' });
+  });
+  // the node also initiates its own election
+  initiateElection();
+}
+
 if (isCoordinator) {
   sendHeartbeatToDirector()
 }
