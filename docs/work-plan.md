@@ -35,8 +35,8 @@ Mechanisms will be in place to handle situations where nodes join or leave the d
 The Node Director has two primary functions: it directs clients to the current coordinator's server and keeps information about the coordinator. When a client connects to the director, they are redirected to the coordinator’s server. To ensure continuity, the coordinator notifies the director of its presence every few seconds, allowing the director to stay up-to-date on the current coordinator. To support these functions, the director provides three endpoints:
 
 `GET /` Redirects the client to the current coordinator's server.  
-`POST /register_coordinator` The director receives the coordinator's ID, internal address and public address.  
-`POST /register_node` The director receives a new node's ID, internal address and public address, then forwards this information to the coordinator.  
+`POST /register_coordinator` The node director receives the coordinator's ID, internal address and public address.  
+`POST /register_node` The node director receives a new node's ID, internal address and public address, then forwards this information to the coordinator.  
 
 <div class="page"/>
 
