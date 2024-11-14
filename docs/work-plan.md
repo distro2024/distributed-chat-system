@@ -32,21 +32,21 @@ Mechanisms will be in place to handle situations where nodes join or leave the d
 - Keeps in contact with the node director to ensure the node director is aware of the current coordinator node and performs health checks on the node director.  
 
 ### Node director
-The Node Director has two primary functions: it directs clients to the current leader's server and keeps information about the leader. When a client connects to the director, they are redirected to the leader’s server. To ensure continuity, the leader notifies the director of its presence every few seconds, allowing the director to stay up-to-date on the current leader. To support these functions, the director provides three endpoints:
+The Node Director has two primary functions: it directs clients to the current coordinator's server and keeps information about the coordinator. When a client connects to the director, they are redirected to the coordinator’s server. To ensure continuity, the coordinator notifies the director of its presence every few seconds, allowing the director to stay up-to-date on the current coordinator. To support these functions, the director provides three endpoints:
 
-`GET /` Redirects the client to the current leader's server.  
-`POST /register_leader` The director receives the leader's ID, internal address and public address.  
-`POST /register_node` The director receives a new node's ID, internal address and public address, then forwards this information to the leader.  
+`GET /` Redirects the client to the current coordinator's server.  
+`POST /register_coordinator` The director receives the coordinator's ID, internal address and public address.  
+`POST /register_node` The director receives a new node's ID, internal address and public address, then forwards this information to the coordinator.  
 
 <div class="page"/>
 
 ### Joining group discussion
 
-When a new node wants to join the chat, it connects first to the director node with a known name. The director node directs it to a coordinator node, which gives two neighbour nodes to exchange messages with. Now the new node is ready for multicasting new messages to its neighbours and to receive messages from them.
+When a new node wants to join the chat, it connects first to the Node Director with a known name. The Node Director directs it to a coordinator node, which gives two neighbour nodes to exchange messages with. Now the new node is ready for multicasting new messages to its neighbours and to receive messages from them.
 
 ```mermaid
 flowchart TD
-    A[Node X] --> |wants to join the chat, calls to Director node| B[Director node]
+    A[Node X] --> |wants to join the chat, calls to Node Director| B[Node Director]
     B --> |directs the new node to Coordinator node| C[Coordinator node]
     C --> |gives neighbours to NodeX| D[Now Node X is a part of the chat]
 ```
