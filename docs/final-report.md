@@ -1,17 +1,35 @@
-# Group Project Work Plan
+# Distributed Chat Systems - Final Report
 
 **Course:** CSM13001 Distributed Systems, University of Helsinki  
 **Members:** Juha Väisänen, Pekka Prökkinen, Ville Hänninen, Heidi Holappa  
 **Group number:** 9  
 
-## Format Clarification
-Please note that this document does not include a cover page as per the guidance from our lecturer. This decision allows us to render the document directly from markdown to PDF for ease of use and consistency.
+// MAYBE A PICTURE HERE? 
+
+<div class="page"/>
+
+## Table of Contents 
+// THIS IS HOW A ToC IS DONE WITH MARKDOWN
+- [Introduction](#introduction)
+- [Techincal overview](#techical-overview)
+  - [Coordinator node](#coordinator-node)
+  - [Node director](#node-director)
+  - ...
+- ...
+- [Group participation](#group-participation)
+- [Use of LLMs](#use-of-llms)
+
+<div class="page"/>
+
+// MAYBE NEW PAGE FOR ALL LEVEL TWO (##) SECTIONS?
 
 ## Introduction
 
 The purpose of this project is to research distributed chat systems and to implement a working prototype. As a novel approach, this system does not contain persistent storage. Instead, chat discussions are transient, like phone calls, and remain active only until all nodes leave the communication. At that point, the discussion is gone and cannot be retrieved.
 
 The justification for such an implementation is that in today's world, we all live with an ever-growing digital footprint. At the same time, many of us have a need for private communication. Most social media services maintain communication history, making it difficult to clear previous discussions. This project introduces an approach in which each discussion is transient by default, promoting a new type of real-time, text-based communication.
+
+<div class="page"/>
 
 ## Techical overview
 
@@ -145,8 +163,11 @@ As the motivation is to built a system for group discussions without any persist
 
 All nodes will reside within containers, which may or may not be located on the same physical machine. This containerized approach ensures flexibility, scalability, and ease of deployment across different environments.
 
+<div class="page"/>
 
 ## Schedule
+
+// DELETE THIS? 
 
 During the first two weeks of the project, the team has concentrated on research and planning. They have designed a preliminary architecture for the implementation and selected the technologies to be used. With these foundational steps completed, the project is now poised to enter the development phase. 
 
@@ -154,9 +175,19 @@ However, some critical details still need to be finalized. Specifically, the tec
 
 In the meantime, the team can proceed by developing the chat nodes and the node director. This phased approach allows for continuous progress while awaiting further clarification on the remaining technical issues.
 
-## Group practices
+<div class="page"/>
+
+## Group participation
+
+- How did everyone participate
+- How did we work
+  - meetings
+  - how we kept in touch
+  - pair coding etc. 
 
 The team maintains active communication through a group discussion on Telegram. Each weekend, they hold an online call to plan the upcoming week and discuss any current issues. Work items are coordinated using a Kanban-style project board on GitHub, where tasks are tracked as issues. This approach helps the team better estimate workloads, coordinate active tasks, and plan the project's timeline effectively.
+
+<div class="page"/>
 
 ## Use of LLMs 
 
