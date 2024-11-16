@@ -3,6 +3,7 @@ const axios = require("axios")
 const http = require("http")
 const { v4: uuidv4 } = require("uuid")
 const path = require("path")
+const io = require("socket.io-client"); // check naming
 
 const PORT = process.env.PORT || 4000
 const DIRECTOR_URL = process.env.DIRECTOR_URL || "http://localhost:3000"
@@ -37,6 +38,19 @@ let nodes = []
 // list of chat-messages in the network
 let discussion = []
 
+
+io.on('connection', (socket) => {
+  console.log('a user connected'); //remove
+
+  socket.on('vote', (voterId) => {
+    console.log(`Received vote from ${voterId}`); //remove
+    submitVote(voterId);
+  });
+  socket.on('message', (msg) => {
+    console.log(`Received message: ${msg}`); //remove
+    handleNewMessage(msg); //To be implemented, see handleNewMessages() below
+  });
+});
 
 app.post("/register_node", (req, res) => {
   const { nodeId, nodeAddress, publicAddress } = req.body
@@ -89,7 +103,7 @@ const initiateElection = async () => {
     // requesting a vote for a new coordinator
     if (node.nodeId > nodeId) {
       const socket = ioClient(node.nodeAddress);
-      socket.emit('election', { nodeId });
+      socket.emit('election', nodeId);
     }
 
 
@@ -100,23 +114,13 @@ const initiateElection = async () => {
 }
 
 /**
-* NOTE: not yet implemented correctly 
 * Handle an incoming election vote from another node
- * Web socket will be implemented in the future
- * @param {any} node - The node that sent the vote
- */
-const submitVote = async () => {
-  // listen to incoming messages to the route /vote 
-  // this should be implemented with web socket in the future
-  // this is just the basic idea
-  app.post('/vote', (req, res) => {
-    const { id } = req.body;
-    // if id is in the list of nodes, this node is not a candidate anymore
-    if (nodes.includes(id)) {
-      isCandidate = false;
-    }
-  });
-  
+* @param {any} voterId - The node that sent the vote
+*/
+const submitVote = (voterId) => {
+  if (nodes.includes(voterId) && voterId > nodeId) {
+    isCandidate = false;
+  }
 }
 
 /**
@@ -130,10 +134,8 @@ const determineVotingOutcome = async () => {
     this.isCoordinator = true
     // send a message to all nodes to update their coordinator
     nodes.forEach((node) => {
-      const socket = ioClient(node.nodeAddress);
-      socket.emit('update-coordinator', { nodeId });
+      node.address.emit('update-coordinator', { nodeId });
     })
-
   } 
 }
 
@@ -153,6 +155,10 @@ const sendResponse = async () => {
   });
   // the node also initiates its own election
   initiateElection();
+}
+
+const handleNewMessage = (msg) => {
+  // TODO: handle messages sorting etc
 }
 
 if (isCoordinator) {
