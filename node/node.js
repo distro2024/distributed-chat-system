@@ -106,6 +106,7 @@ const registerWithDirector = async () => {
   }
 }
 
+
 /**
  * Send a message to all nodes to elect a new coordinator
  * @param {ChatNode} chatNode - The chat node instance for this client
@@ -153,15 +154,20 @@ const handleIncomingVote = (voterId) => {
   }
 }
 
-
+/**
+ * A node has elected itself as the new coordinator. Update the
+ * Coordinator information. If this node has higher id, challenge
+ * the new coordinator
+ * @param {*} newCoordinatorId 
+ */
 const handleNewCoordinator = (newCoordinatorId) => {
-  coordinatorId = newCoordinatorId;
-  coordinatorAddress = nodes.find(node => node.nodeId === newCoordinatorId).nodeAddress;
   
-  // If this node is coordinator, but current node has a higher id
-  // relinquish coordinator status. Else challenge the new coordinator
-  if (isCoordinator && newCoordinatorId > nodeId) {
+  // If the new coordinator has a higher id relinquish coordinator status
+  // Else challenge the new coordinator
+  if (newCoordinatorId > nodeId) {
     isCoordinator = false;
+    coordinatorId = newCoordinatorId;
+    coordinatorAddress = nodes.find(node => node.nodeId === newCoordinatorId).nodeAddress;
   } else {
     initiateElection();
   }
@@ -169,7 +175,7 @@ const handleNewCoordinator = (newCoordinatorId) => {
 
 /**
  * Send a response to an incoming election request and
- * initiate an election 
+ * become a candidate by initiating an election 
  */
 const sendElectionResponse = async (candidateId) => {
   candidateId.address.emit('submit-vote', nodeId);
