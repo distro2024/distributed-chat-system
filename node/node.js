@@ -159,7 +159,7 @@ const sendResponse = async () => {
   initiateElection();
 }
 
-const handleNewMessage = (msg) => {
+const handleNewMessage = async (msg) => {
   const { id, node_id, vector_clock, message, timestamp } = msg;
   // Ensure the vector clock is the same length as the local vector clock
   const maxLength = Math.max(vectorClock.length, vector_clock.length);
@@ -193,7 +193,7 @@ const sortMessages = (messages) => {
   });
 };
 
-const sendNewMessage = (message) => {
+const sendNewMessage = async (message) => {
   // Increment the local vector clock
   vectorClock[nodeId]++;
   const newMessage = { id, nodeId, vector_clock: vectorClock, message, timestamp: Date.now() };
