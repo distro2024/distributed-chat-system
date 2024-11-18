@@ -4,6 +4,12 @@ const http = require("http")
 const { v4: uuidv4 } = require("uuid")
 const path = require("path")
 const io = require("socket.io-client"); // check naming
+const { 
+  initiateElection, 
+  handleIncomingVote, 
+  handleNewCoordinator, 
+  sendElectionResponse } = require("./election")
+
 
 const PORT = process.env.PORT || 4000
 const DIRECTOR_URL = process.env.DIRECTOR_URL || "http://localhost:3000"
@@ -28,10 +34,6 @@ let isCoordinator = IS_LEADER // testing
 let coordinatorId = isCoordinator ? nodeId : null
 let coordinatorAddress = IS_LEADER ? NODE_HOST : null
 let coordinatorPublicAddress = IS_LEADER ? PUBLIC_HOST : null
-
-// when an election is initiated, this node becomes a candidate
-// if it receives an OK from a higher priority node, it will not be a candidate anymore
-let isCandidate = false
 
 
 // list of nodes in the network
@@ -88,7 +90,7 @@ const sendHeartbeatToDirector = async () => {
     } catch (error) {
       console.error("Error sending heartbeat to Director:", error.message)
       isCoordinator = false
-      initiateElection()
+      initiateElection(nodeId, nodes, coordinator, registerWithDirector)
     }
   }
 }
@@ -106,81 +108,6 @@ const registerWithDirector = async () => {
   }
 }
 
-
-/**
- * Send a message to all nodes to elect a new coordinator
- * @param {ChatNode} chatNode - The chat node instance for this client
- */
-const initiateElection = async () => {
-  isCandidate = true
-  nodes.forEach((node) => {
-    // Sends a message through a web socket to a node
-    // requesting a vote for a new coordinator
-    if (node.nodeId > nodeId) {
-      const socket = ioClient(node.nodeAddress);
-      node.address.emit('election', nodeId);
-    }
-
-  })
-  // Wait for three seconds to receive votes from other nodes
-  setTimeout(determineVotingOutcome, 3000)
-  determineVotingOutcome()
-}
-
-/**
-* Determine the outcome of the election based
- * on the selected election algorithm
- * @param {ChatNode} chatNode - The chat node instance for this client
- */
-const determineVotingOutcome = async () => {
-  if (isCandidate) {
-    this.isCoordinator = true
-    // send a message to all nodes to update their coordinator
-    nodes.forEach((node) => {
-      node.address.emit('update-coordinator', { nodeId });
-    })
-    // send a message to the director to update the coordinator
-    registerWithDirector()
-  } 
-}
-
-/**
-* Handle an incoming election vote from another node
-* @param {any} voterId - The node that sent the vote
-*/
-const handleIncomingVote = (voterId) => {
-  if (nodes.includes(voterId) && voterId > nodeId) {
-    isCandidate = false;
-  }
-}
-
-/**
- * A node has elected itself as the new coordinator. Update the
- * Coordinator information. If this node has higher id, challenge
- * the new coordinator
- * @param {*} newCoordinatorId 
- */
-const handleNewCoordinator = (newCoordinatorId) => {
-  
-  // If the new coordinator has a higher id relinquish coordinator status
-  // Else challenge the new coordinator
-  if (newCoordinatorId > nodeId) {
-    isCoordinator = false;
-    coordinatorId = newCoordinatorId;
-    coordinatorAddress = nodes.find(node => node.nodeId === newCoordinatorId).nodeAddress;
-  } else {
-    initiateElection();
-  }
-}
-
-/**
- * Send a response to an incoming election request and
- * become a candidate by initiating an election 
- */
-const sendElectionResponse = async (candidateId) => {
-  candidateId.address.emit('submit-vote', nodeId);
-  initiateElection();
-}
 
 
 const handleNewMessage = (msg) => {
