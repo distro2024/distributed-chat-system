@@ -23,6 +23,7 @@ const nodeId = uuidv4()
 
 // For now, node1 is always the leader based on the IS_LEADER environment variable
 
+let coordinator = null
 let isCoordinator = IS_LEADER // testing
 let coordinatorId = isCoordinator ? nodeId : null
 let coordinatorAddress = IS_LEADER ? NODE_HOST : null
@@ -42,13 +43,27 @@ let discussion = []
 io.on('connection', (socket) => {
   console.log('a user connected'); //remove
 
-  socket.on('vote', (voterId) => {
-    console.log(`Received vote from ${voterId}`); //remove
-    submitVote(voterId);
-  });
   socket.on('message', (msg) => {
     console.log(`Received message: ${msg}`); //remove
     handleNewMessage(msg); //To be implemented, see handleNewMessages() below
+  });
+
+
+  // Incoming requests regarding election process
+  // A vote is received from another node
+  socket.on('vote', (voterId) => {
+    console.log(`Received vote from ${voterId}`); //remove
+    handleIncomingVote(voterId);
+  });
+  // A new coordinator is elected
+  socket.on('update-coordinator', (newCoordinatorId) => {
+    console.log(`Received new coordinator: ${newCoordinatorId}`); // remove
+    handleNewCoordinator(newCoordinatorId);
+  });
+  // An election request is received
+  socket.on('election', (coordinatorCandidateId) => {
+    console.log(`Received election request`); // remove
+    sendElectionResponse(coordinatorCandidateId);
   });
 });
 
@@ -92,7 +107,6 @@ const registerWithDirector = async () => {
 }
 
 /**
- * NOTE: not yet implemented correctly
  * Send a message to all nodes to elect a new coordinator
  * @param {ChatNode} chatNode - The chat node instance for this client
  */
@@ -103,9 +117,8 @@ const initiateElection = async () => {
     // requesting a vote for a new coordinator
     if (node.nodeId > nodeId) {
       const socket = ioClient(node.nodeAddress);
-      socket.emit('election', nodeId);
+      node.address.emit('election', nodeId);
     }
-
 
   })
   // Wait for three seconds to receive votes from other nodes
@@ -114,17 +127,6 @@ const initiateElection = async () => {
 }
 
 /**
-* Handle an incoming election vote from another node
-* @param {any} voterId - The node that sent the vote
-*/
-const submitVote = (voterId) => {
-  if (nodes.includes(voterId) && voterId > nodeId) {
-    isCandidate = false;
-  }
-}
-
-/**
-* NOTE: not yet implemented correctly 
 * Determine the outcome of the election based
  * on the selected election algorithm
  * @param {ChatNode} chatNode - The chat node instance for this client
@@ -136,26 +138,44 @@ const determineVotingOutcome = async () => {
     nodes.forEach((node) => {
       node.address.emit('update-coordinator', { nodeId });
     })
+    // send a message to the director to update the coordinator
+    registerWithDirector()
   } 
 }
 
 /**
- * NOTE: not yet implemented correctly
- * Send a response to election request
+* Handle an incoming election vote from another node
+* @param {any} voterId - The node that sent the vote
+*/
+const handleIncomingVote = (voterId) => {
+  if (nodes.includes(voterId) && voterId > nodeId) {
+    isCandidate = false;
+  }
+}
+
+
+const handleNewCoordinator = (newCoordinatorId) => {
+  coordinatorId = newCoordinatorId;
+  coordinatorAddress = nodes.find(node => node.nodeId === newCoordinatorId).nodeAddress;
+  
+  // If this node is coordinator, but current node has a higher id
+  // relinquish coordinator status. Else challenge the new coordinator
+  if (isCoordinator && newCoordinatorId > nodeId) {
+    isCoordinator = false;
+  } else {
+    initiateElection();
+  }
+}
+
+/**
+ * Send a response to an incoming election request and
+ * initiate an election 
  */
-const sendResponse = async () => {
-  // listen to incoming messages to the route /election
-  // this should be implemented with web socket in the future
-  // this is just the basic idea
-  app.post('/election', (req, res) => {
-    const { id } = req.body;
-    // if id is greater than this node's id, send a response
-    // NOTE: does not match the message in work-plan. WIll be fixed in the future
-    res.send({ response: 'ok' });
-  });
-  // the node also initiates its own election
+const sendElectionResponse = async (candidateId) => {
+  candidateId.address.emit('submit-vote', nodeId);
   initiateElection();
 }
+
 
 const handleNewMessage = (msg) => {
   // TODO: handle messages sorting etc
