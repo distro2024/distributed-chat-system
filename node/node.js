@@ -3,7 +3,7 @@ const axios = require("axios")
 const http = require("http")
 const { v4: uuidv4 } = require("uuid")
 const path = require("path")
-const io = require("socket.io-client"); // check naming
+const socketIo = require("socket.io");
 
 const PORT = process.env.PORT || 4000
 const DIRECTOR_URL = process.env.DIRECTOR_URL || "http://localhost:3000"
@@ -15,6 +15,7 @@ const IS_LEADER = process.env.IS_LEADER === "true"
 
 const app = express()
 const server = http.createServer(app)
+const io = socketIo(server); // initialize socket.io with the server
 
 app.use(express.static(path.join(__dirname, "public")))
 app.use(express.json())
@@ -37,7 +38,8 @@ let isCandidate = false
 let nodes = []
 // list of chat-messages in the network
 let discussion = []
-
+// vector clock for the consistency of the chat
+let vectorClock = []
 
 io.on('connection', (socket) => {
   console.log('a user connected'); //remove
@@ -158,8 +160,46 @@ const sendResponse = async () => {
 }
 
 const handleNewMessage = (msg) => {
-  // TODO: handle messages sorting etc
+  const { id, node_id, vector_clock, message, timestamp } = msg;
+  // Ensure the vector clock is the same length as the local vector clock
+  const maxLength = Math.max(vectorClock.length, vector_clock.length);
+  for (let i = 0; i < maxLength; i++) {
+    vectorClock[i] = vectorClock[i] || 0; // Initialize undefined indices to 0
+  }
+  // Merge the sender's vector clock with the local vector clock
+  for (let i = 0; i < vectorClock.length; i++) {
+    vectorClock[i] = Math.max(vectorClock[i], vector_clock[i]);
+  }
+  // Add the message to the discussion
+  discussion.push( { message, timestamp, vectorClock: { ...vectorClock } } );
+  sortMessages(discussion);
 }
+
+const sortMessages = (messages) => {
+  return messages.sort((a, b) => {
+    // Sort messages by vector clock
+    const vcA = a.vector_clock;
+    const vcB = b.vector_clock;
+    for (let i = 0; i < Math.max(vcA.length, vcB.length); i++) {
+      // The loop will break immediately when a difference is found
+      if (vcA[i]< vcB[i]) {
+        return -1;
+      } else if (vcA[i]> vcB[i]) {
+        return 1;
+      }
+    }
+    // If vector clocks are concurrent (i.e., equal), timestamp serves as tiebreaker 
+    return a.timestamp - b.timestamp;
+  });
+};
+
+const sendNewMessage = (message) => {
+  // Increment the local vector clock
+  vectorClock[nodeId]++;
+  const newMessage = { id, nodeId, vector_clock: vectorClock, message, timestamp: Date.now() };
+  // TODO: Send the message to all nodes in the network
+}
+
 
 if (isCoordinator) {
   sendHeartbeatToDirector()
@@ -175,3 +215,15 @@ server.listen(PORT, () => {
     // TODO initiateElection();
   }
 })
+/*
+// For testing purposes only. Remove this code block when done
+const messages = [
+  { message: "A", vector_clock: [3, 4, 1], timestamp: 1690001000000 },
+  { message: "B", vector_clock: [3, 4, 0], timestamp: 1690002000000 },
+  { message: "C", vector_clock: [2, 2, 0], timestamp: 1690001500000 },
+  { message: "D", vector_clock: [1, 1, 0], timestamp: 1690003000000 },
+];
+const sortedMessages = sortMessages(messages);
+console.log(sortedMessages);
+// End of the testing code block
+*/
