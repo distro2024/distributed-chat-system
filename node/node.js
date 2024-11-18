@@ -39,7 +39,7 @@ let nodes = []
 // list of chat-messages in the network
 let discussion = []
 // vector clock for the consistency of the chat
-let vectorClock = []
+let vectorClock = {}
 
 io.on('connection', (socket) => {
   console.log('a user connected'); //remove
@@ -161,14 +161,15 @@ const sendResponse = async () => {
 
 const handleNewMessage = async (msg) => {
   const { id, node_id, vector_clock, message, timestamp } = msg;
-  // Ensure the vector clock is the same length as the local vector clock
-  const maxLength = Math.max(vectorClock.length, vector_clock.length);
-  for (let i = 0; i < maxLength; i++) {
-    vectorClock[i] = vectorClock[i] || 0; // Initialize undefined indices to 0
+  // Ensure all keys in the received vector clock are present in the local vector clock
+  for (const key in vector_clock) {
+    if (!(key in vectorClock)) {
+      vectorClock[key] = 0; // Initialize missing keys to 0
+    }
   }
-  // Merge the sender's vector clock with the local vector clock
-  for (let i = 0; i < vectorClock.length; i++) {
-    vectorClock[i] = Math.max(vectorClock[i], vector_clock[i]);
+  // Merge the received vector clock into the local vector clock
+  for (const key in vector_clock) {
+    vectorClock[key] = Math.max(vectorClock[key], vector_clock[key]);
   }
   // Add the message to the discussion
   discussion.push( { message, timestamp, vectorClock: { ...vectorClock } } );
@@ -180,11 +181,12 @@ const sortMessages = (messages) => {
     // Sort messages by vector clock
     const vcA = a.vector_clock;
     const vcB = b.vector_clock;
-    for (let i = 0; i < Math.max(vcA.length, vcB.length); i++) {
+    const allKeys = new Set([...Object.keys(vcA), ...Object.keys(vcB)]);
+    for (const key of allKeys) {
       // The loop will break immediately when a difference is found
-      if (vcA[i]< vcB[i]) {
+      if (vcA[key]< vcB[key]) {
         return -1;
-      } else if (vcA[i]> vcB[i]) {
+      } else if (vcA[key]> vcB[key]) {
         return 1;
       }
     }
@@ -195,7 +197,7 @@ const sortMessages = (messages) => {
 
 const sendNewMessage = async (message) => {
   // Increment the local vector clock
-  vectorClock[nodeId]++;
+  vectorClock[nodeId] = (vectorClock[nodeId]) + 1;
   const newMessage = { id, nodeId, vector_clock: vectorClock, message, timestamp: Date.now() };
   // TODO: Send the message to all nodes in the network
 }
@@ -218,8 +220,8 @@ server.listen(PORT, () => {
 /*
 // For testing purposes only. Remove this code block when done
 const messages = [
-  { message: "A", vector_clock: [3, 4, 1], timestamp: 1690001000000 },
-  { message: "B", vector_clock: [3, 4, 0], timestamp: 1690002000000 },
+  { message: "A", vector_clock: [3, 4, 0], timestamp: 1690001000000 },
+  { message: "B", vector_clock: [3, 4, 1], timestamp: 1690002000000 },
   { message: "C", vector_clock: [2, 2, 0], timestamp: 1690001500000 },
   { message: "D", vector_clock: [1, 1, 0], timestamp: 1690003000000 },
 ];
