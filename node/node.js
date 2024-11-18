@@ -188,7 +188,7 @@ const sortMessages = (messages) => {
         return 1;
       }
     }
-    // If vector clocks are concurrent (i.e., equal), timestamp serves as tiebreaker 
+    // If vector clocks are concurrent (i.e., equal), timestamps serve as tiebreakers 
     return a.timestamp - b.timestamp;
   });
 };
