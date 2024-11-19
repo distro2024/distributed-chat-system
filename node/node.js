@@ -167,8 +167,9 @@ const sendNewMessage = async (message) => {
   vectorClock[nodeId] = (vectorClock[nodeId]) + 1;
   const newMessage = { id, nodeId, vector_clock: vectorClock, message, timestamp: Date.now() };
   // Save the message for further processing
+  // handleNewMessage should work for both receiving and sending messages.
   let discussion = handleNewMessage(vectorClock, newMessage)
-  // Send the message to all other nodes
+   // Broadcast the message to all other nodes
   for (let node of nodes) {
     if (node.nodeId != nodeId) {
     node.address.emit('message', newMessage);
