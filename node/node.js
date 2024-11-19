@@ -4,6 +4,7 @@ const http = require("http")
 const { v4: uuidv4 } = require("uuid")
 const path = require("path")
 const socketIo = require("socket.io");
+const {handleNewMessage} = require('./handleNewMessage');
 
 const PORT = process.env.PORT || 4000
 const DIRECTOR_URL = process.env.DIRECTOR_URL || "http://localhost:3000"
@@ -39,7 +40,7 @@ let nodes = []
 // list of chat-messages in the network
 let discussion = []
 // vector clock for the consistency of the chat
-let vectorClock = {}
+let vectorClock = {nodeId: 0} // Initialize the vector clock with the current node's ID
 
 io.on('connection', (socket) => {
   console.log('a user connected'); //remove
@@ -50,7 +51,9 @@ io.on('connection', (socket) => {
   });
   socket.on('message', (msg) => {
     console.log(`Received message: ${msg}`); //remove
-    handleNewMessage(msg); //To be implemented, see handleNewMessages() below
+    let temp = handleNewMessage(vectorClock, msg);
+    vectorClock = temp[0];
+    discussion = temp[1];
   });
 });
 
@@ -159,49 +162,12 @@ const sendResponse = async () => {
   initiateElection();
 }
 
-const handleNewMessage = async (msg) => {
-  const { id, node_id, vector_clock, message, timestamp } = msg;
-  // Ensure all keys in the received vector clock are present in the local vector clock
-  for (const key in vector_clock) {
-    if (!(key in vectorClock)) {
-      vectorClock[key] = 0; // Initialize missing keys to 0
-    }
-  }
-  // Merge the received vector clock into the local vector clock
-  for (const key in vector_clock) {
-    vectorClock[key] = Math.max(vectorClock[key], vector_clock[key]);
-  }
-  // Add the message to the discussion
-  discussion.push( { message, timestamp, vectorClock: { ...vectorClock } } );
-  sortMessages(discussion);
-}
-
-const sortMessages = (messages) => {
-  return messages.sort((a, b) => {
-    // Sort messages by vector clock
-    const vcA = a.vector_clock;
-    const vcB = b.vector_clock;
-    const allKeys = new Set([...Object.keys(vcA), ...Object.keys(vcB)]);
-    for (const key of allKeys) {
-      // The loop will break immediately when a difference is found
-      if (vcA[key]< vcB[key]) {
-        return -1;
-      } else if (vcA[key]> vcB[key]) {
-        return 1;
-      }
-    }
-    // If vector clocks are concurrent (i.e., equal), timestamps serve as tiebreakers 
-    return a.timestamp - b.timestamp;
-  });
-};
-
 const sendNewMessage = async (message) => {
   // Increment the local vector clock
   vectorClock[nodeId] = (vectorClock[nodeId]) + 1;
   const newMessage = { id, nodeId, vector_clock: vectorClock, message, timestamp: Date.now() };
   // TODO: Send the message to all nodes in the network
 }
-
 
 if (isCoordinator) {
   sendHeartbeatToDirector()
@@ -217,15 +183,3 @@ server.listen(PORT, () => {
     // TODO initiateElection();
   }
 })
-/*
-// For testing purposes only. Remove this code block when done
-const messages = [
-  { message: "A", vector_clock: [3, 4, 0], timestamp: 1690001000000 },
-  { message: "B", vector_clock: [3, 4, 1], timestamp: 1690002000000 },
-  { message: "C", vector_clock: [2, 2, 0], timestamp: 1690001500000 },
-  { message: "D", vector_clock: [1, 1, 0], timestamp: 1690003000000 },
-];
-const sortedMessages = sortMessages(messages);
-console.log(sortedMessages);
-// End of the testing code block
-*/
