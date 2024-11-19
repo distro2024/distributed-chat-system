@@ -3,7 +3,8 @@ const axios = require("axios")
 const http = require("http")
 const { v4: uuidv4 } = require("uuid")
 const path = require("path")
-const io = require("socket.io-client"); // check naming
+const socketIo = require("socket.io");
+const {handleNewMessage} = require('./handleNewMessage');
 
 const PORT = process.env.PORT || 4000
 const DIRECTOR_URL = process.env.DIRECTOR_URL || "http://localhost:3000"
@@ -15,6 +16,7 @@ const IS_LEADER = process.env.IS_LEADER === "true"
 
 const app = express()
 const server = http.createServer(app)
+const io = socketIo(server); // initialize socket.io with the server
 
 app.use(express.static(path.join(__dirname, "public")))
 app.use(express.json())
@@ -35,9 +37,8 @@ let isCandidate = false
 
 // list of nodes in the network
 let nodes = []
-// list of chat-messages in the network
-let discussion = []
-
+// vector clock for the consistency of the chat
+let vectorClock = {nodeId: 0} // Initialize the vector clock with the current node's ID
 
 io.on('connection', (socket) => {
   console.log('a user connected'); //remove
@@ -48,7 +49,11 @@ io.on('connection', (socket) => {
   });
   socket.on('message', (msg) => {
     console.log(`Received message: ${msg}`); //remove
-    handleNewMessage(msg); //To be implemented, see handleNewMessage() below
+    let temp = handleNewMessage(vectorClock, msg);
+    // Update the local vector clock
+    vectorClock = temp[0];
+    // Save the message for further processing
+    let discussion = temp[1];
   });
 });
 
@@ -161,8 +166,19 @@ const sendResponse = async () => {
   initiateElection();
 }
 
-const handleNewMessage = (msg) => {
-  // TODO: handle messages sorting etc
+const sendNewMessage = async (message) => {
+  // Increment the local vector clock
+  vectorClock[nodeId] = (vectorClock[nodeId]) + 1;
+  const newMessage = { id, nodeId, vector_clock: vectorClock, message, timestamp: Date.now() };
+  // Save the message for further processing
+  // handleNewMessage should work for both receiving and sending messages.
+  let discussion = handleNewMessage(vectorClock, newMessage)
+   // Broadcast the message to all other nodes
+  for (let node of nodes) {
+    if (node.nodeId != nodeId) {
+    node.address.emit('message', newMessage);
+    }
+  }
 }
 
 if (isCoordinator) {
