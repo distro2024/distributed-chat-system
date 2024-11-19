@@ -58,9 +58,11 @@ io.on('connection', (socket) => {
     handleIncomingVote(voterId, nodes);
   });
   // A new coordinator is elected
-  socket.on('update-coordinator', (newCoordinatorId) => {
+  coordinator = socket.on('update-coordinator', (newCoordinatorId) => {
     console.log(`Received new coordinator: ${newCoordinatorId}`); // remove
-    handleNewCoordinator(nodeId, newCoordinatorId, nodes, coordinator, registerWithDirector);
+    coordinator = handleNewCoordinator(nodeId, newCoordinatorId, nodes, coordinator, registerWithDirector);
+    coordinatorId = coordinator.id;
+    coordinatorAddress = coordinator.address;
   });
   // An election request is received
   socket.on('election', (coordinatorCandidateId) => {
