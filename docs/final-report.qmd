@@ -1,3 +1,8 @@
+---
+title: "Distributed Chat System"
+format: gfm
+---
+
 # Distributed Chat Systems - Final Report
 
 **Course:** CSM13001 Distributed Systems, University of Helsinki  
@@ -6,20 +11,20 @@
 
 // MAYBE A PICTURE HERE? 
 
-<div class="page"/>
+{{< pagebreak >}}
 
 ## Table of Contents 
-// THIS IS HOW A ToC IS DONE WITH MARKDOWN
-- [Introduction](#introduction)
-- [Techincal overview](#techical-overview)
-  - [Coordinator node](#coordinator-node)
-  - [Node director](#node-director)
+// THIS IS HOW A ToC IS DONE WITH MARKDOWN  
+- [Introduction](#introduction)  
+- [Techincal overview](#techical-overview)  
+  - [Coordinator node](#coordinator-node)  
+  - [Node director](#node-director)  
   - ...
 - ...
-- [Group participation](#group-participation)
-- [Use of LLMs](#use-of-llms)
+- [Group participation](#group-participation)  
+- [Use of LLMs](#use-of-llms)  
 
-<div class="page"/>
+{{< pagebreak >}}
 
 // MAYBE NEW PAGE FOR ALL LEVEL TWO (##) SECTIONS?
 
@@ -29,13 +34,13 @@ The purpose of this project is to research distributed chat systems and to imple
 
 The justification for such an implementation is that in today's world, we all live with an ever-growing digital footprint. At the same time, many of us have a need for private communication. Most social media services maintain communication history, making it difficult to clear previous discussions. This project introduces an approach in which each discussion is transient by default, promoting a new type of real-time, text-based communication.
 
-<div class="page"/>
+{{< pagebreak >}}
 
 ## Techical overview
 
 The system under design provides a chat application for end users. When users launch the application to initiate a chat discussion, the client application becomes one of the **chat-nodes** (later nodes) in the distributed chat system. The system includes a **node director** responsible for connecting nodes to each other. In this proof-of-concept version all nodes participate in the same discussion.
 
-Terminology:
+Terminology:  
 - **node:** chat-node sends and receives messages from other chat-nodes. Chat-node can also serve as a coordinator for other chat-nodes (detailed later in the document)
 - **node director:** node director connects new chat-nodes into the group discussion. Node director does not participate in chat discussion, but communicates with the coordinator node (detailed later in the document)
 
@@ -56,20 +61,20 @@ The Node Director has two primary functions: it directs clients to the current c
 `POST /register_coordinator` The node director receives the coordinator's ID, internal address and public address.  
 `POST /register_node` The node director receives a new node's ID, internal address and public address, then forwards this information to the coordinator.  
 
-<div class="page"/>
+{{< pagebreak >}}
 
 ### Joining group discussion
 
 When a new node wants to join the chat, it connects first to the Node Director with a known name. The Node Director directs it to a coordinator node, which gives two neighbour nodes to exchange messages with. Now the new node is ready for multicasting new messages to its neighbours and to receive messages from them.
 
-```mermaid
+```{mermaid}
 flowchart TD
     A[Node X] --> |wants to join the chat, calls to Node Director| B[Node Director]
     B --> |directs the new node to Coordinator node| C[Coordinator node]
     C --> |gives neighbours to NodeX| D[Now Node X is a part of the chat]
 ```
 
-<div class="page"/>
+{{< pagebreak >}}
 
 ### Sending and receiving messages
 
@@ -108,7 +113,7 @@ Higher priority nodes respond with an OK: POST `/vote`
     "ok": "uuid"
 }
 ```
-<div class="page"/>
+{{< pagebreak >}}
 
 Once one of the nodes has bullied other into submission, they notify other nodes that they are the new coordinator: POST `/update-coordinator`
 ```json
@@ -149,7 +154,7 @@ The coordinator then responds with the discussion history (a list of message obj
 
 To ensure message consistency in our distributed chat system, our team implements vector clocks for reliable sequencing across nodes without the need for centralized synchronization. Each node is equipped with a vector clock that meticulously tracks the events it processes. Whenever a node sends a message, it first increments its clock, embedding this updated information within the message itself. Upon receipt, a node merges its vector clock with that of the sender, harmonizing both histories. This methodological merging not only maintains historical accuracy but also aids in identifying causal relationships and resolving potential conflicts, thereby supporting our system's scalable and efficient message ordering.
 
-<div class="page"/>
+{{< pagebreak >}}
 
 ### Language selection
 
@@ -163,7 +168,7 @@ As the motivation is to built a system for group discussions without any persist
 
 All nodes will reside within containers, which may or may not be located on the same physical machine. This containerized approach ensures flexibility, scalability, and ease of deployment across different environments.
 
-<div class="page"/>
+{{< pagebreak >}}
 
 ## Schedule
 
@@ -175,7 +180,7 @@ However, some critical details still need to be finalized. Specifically, the tec
 
 In the meantime, the team can proceed by developing the chat nodes and the node director. This phased approach allows for continuous progress while awaiting further clarification on the remaining technical issues.
 
-<div class="page"/>
+{{< pagebreak >}}
 
 ## Group participation
 
@@ -187,7 +192,7 @@ In the meantime, the team can proceed by developing the chat nodes and the node 
 
 The team maintains active communication through a group discussion on Telegram. Each weekend, they hold an online call to plan the upcoming week and discuss any current issues. Work items are coordinated using a Kanban-style project board on GitHub, where tasks are tracked as issues. This approach helps the team better estimate workloads, coordinate active tasks, and plan the project's timeline effectively.
 
-<div class="page"/>
+{{< pagebreak >}}
 
 ## Use of LLMs 
 

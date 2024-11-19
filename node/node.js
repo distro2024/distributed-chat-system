@@ -59,11 +59,14 @@ io.on('connection', (socket) => {
 
 app.post("/register_node", (req, res) => {
   const { nodeId, nodeAddress, publicAddress } = req.body
+  const neighbours = [...nodes] // exclude the node who is getting neighbours
+
   nodes.push({ nodeId, nodeAddress, publicAddress })
   console.log(
     `Leader received registration from node: ${nodeId}, internal address ${nodeAddress}, public address ${publicAddress}`
   )
-  res.sendStatus(200)
+
+  res.json({ neighbours })
 })
 
 const sendHeartbeatToDirector = async () => {
@@ -85,12 +88,13 @@ const sendHeartbeatToDirector = async () => {
 
 const registerWithDirector = async () => {
   try {
-    await axios.post(`${DIRECTOR_URL}/register_node`, {
+    const neighbours = await axios.post(`${DIRECTOR_URL}/register_node`, {
       nodeId,
       nodeAddress: NODE_HOST,
       publicAddress: PUBLIC_HOST,
     })
     console.log("Registered with director")
+    nodes = neighbours.data.neighbours; // save neighbours
   } catch (error) {
     console.error("Error registering with director:", error.message)
   }
