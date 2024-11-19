@@ -5,9 +5,8 @@ describe('Message Handling', () => {
   let discussion;
 
   beforeEach(() => {
-    // Initialize vectorClock with specific initial values
-    vectorClock = { A: 0, B: 0 }; // Assuming nodes A and B should start with a clock of 0
-    discussion = [];
+    vectorClock = { A: 0, B: 0 }; // Initial state of the vector clock
+    discussion = []; // Clear the discussion array before each test
   });
 
   test('handleNewMessage processes and sorts messages correctly', async () => {
@@ -17,52 +16,58 @@ describe('Message Handling', () => {
         node_id: 'A',
         vector_clock: { A: 1 },
         message: 'Hello from A',
-        timestamp: 1000
+        timestamp: 1000,
       },
       {
         id: 2,
         node_id: 'B',
         vector_clock: { B: 1 },
         message: 'Hello from B',
-        timestamp: 1100
+        timestamp: 1100,
       },
       {
         id: 3,
         node_id: 'A',
         vector_clock: { A: 2, B: 1 },
         message: 'Follow up from A',
-        timestamp: 1200
-      }
+        timestamp: 1200,
+      },
     ];
 
-    // Simulate receiving and processing each message
     for (const msg of messages) {
       const result = await handleNewMessage(vectorClock, msg);
       vectorClock = result.vectorClock;
       discussion = result.discussion;
     }
 
-    // Test vector clock updates
+    // Check the final state of the vector clock
     expect(vectorClock).toEqual({ A: 2, B: 1 });
 
-    // Test discussion sort order
+    // Check the sorted discussion
     expect(discussion).toEqual([
       {
+        id: 1,
+        node_id: 'A',
+        vectorClock: { A: 1, B: 0 }, // Vector clock after the first message
         message: 'Hello from A',
         timestamp: 1000,
-        vectorClock: { A: 1, B: 0 }
       },
       {
+        id: 2,
+        node_id: 'B',
+        vectorClock: { A: 1, B: 1 }, // Vector clock after the second message
         message: 'Hello from B',
         timestamp: 1100,
-        vectorClock: { A: 1, B: 1 }
       },
       {
+        id: 3,
+        node_id: 'A',
+        vectorClock: { A: 2, B: 1 }, // Vector clock after the third message
         message: 'Follow up from A',
         timestamp: 1200,
-        vectorClock: { A: 2, B: 1 }
-      }
+      },
     ]);
   });
 });
+
 

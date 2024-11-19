@@ -2,17 +2,19 @@ let discussion = []
 const handleNewMessage = async (vectorClock, msg) => {
     const { id, node_id, vector_clock, message, timestamp } = msg;
     // Ensure all keys in the received vector clock are present in the local vector clock
+    
     for (const key in vector_clock) {
       if (!(key in vectorClock)) {
         vectorClock[key] = 0; // Initialize missing keys to 0
       }
     }
-    // Merge the received vector clock into the local vector clock
+    // Merge the received vector clock into the local vector clock.
+    // When sending a message, the sender merges its own vector clock into the local vector clock.
     for (const key in vector_clock) {
       vectorClock[key] = Math.max(vectorClock[key], vector_clock[key]);
     }
     // Add the message to the discussion
-    discussion.push( { message, timestamp, vectorClock: { ...vectorClock } } );
+    discussion.push( { id, node_id, vectorClock: { ...vectorClock }, message, timestamp, });
     // Return the updated vector clock and discussion
     return {
         vectorClock, 

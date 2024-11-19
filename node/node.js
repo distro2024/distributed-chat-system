@@ -37,8 +37,6 @@ let isCandidate = false
 
 // list of nodes in the network
 let nodes = []
-// list of chat-messages in the network
-let discussion = []
 // vector clock for the consistency of the chat
 let vectorClock = {nodeId: 0} // Initialize the vector clock with the current node's ID
 
@@ -52,8 +50,10 @@ io.on('connection', (socket) => {
   socket.on('message', (msg) => {
     console.log(`Received message: ${msg}`); //remove
     let temp = handleNewMessage(vectorClock, msg);
+    // Update the local vector clock
     vectorClock = temp[0];
-    discussion = temp[1];
+    // Save the message for further processing
+    let discussion = temp[1];
   });
 });
 
@@ -166,7 +166,14 @@ const sendNewMessage = async (message) => {
   // Increment the local vector clock
   vectorClock[nodeId] = (vectorClock[nodeId]) + 1;
   const newMessage = { id, nodeId, vector_clock: vectorClock, message, timestamp: Date.now() };
-  // TODO: Send the message to all nodes in the network
+  // Save the message for further processing
+  let discussion = handleNewMessage(vectorClock, newMessage)
+  // Send the message to all other nodes
+  for (let node of nodes) {
+    if (node.nodeId != nodeId) {
+    node.address.emit('message', newMessage);
+    }
+  }
 }
 
 if (isCoordinator) {
