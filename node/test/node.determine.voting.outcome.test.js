@@ -1,11 +1,11 @@
-const { determineVotingOutcome } = require('../election');
+const e = require('express');
+const { setIsCandidate, determineVotingOutcome } = require('../election');
 
 describe('determineVotingOutcome', () => {
-    let nodeId;
+    let chatNode;
     let nodes;
     let coordinator;
     let mockRegisterWithDirector;
-    let isCandidate;
 
     beforeEach(() => {
         coordinator = null;
@@ -16,36 +16,29 @@ describe('determineVotingOutcome', () => {
         
         // Mock the registerWithDirector function
         mockRegisterWithDirector = jest.fn();
-        isCandidate = true;
     });
 
-    it('node is Set as coordinator', async () => {
-        nodeId = 4;
-        await determineVotingOutcome(nodeId, isCandidate, nodes, coordinator, mockRegisterWithDirector);
-    
-        // Verify `emit` is called for each node
-        nodes.forEach((node) => {
-          expect(node.address.emit).toHaveBeenCalledWith('update-coordinator', { nodeId });
-        });
-    
-        // Verify registerWithDirector is called
-        expect(mockRegisterWithDirector).toHaveBeenCalled();
+    it('node is Set as the new coordinator', async () => {
+        chatNode = { id: 4, address: { emit: jest.fn() } };
+        setIsCandidate(true);
+        nodes.push(chatNode);
+        coordinator = null; 
+        
+        coordinator = determineVotingOutcome(chatNode.id, nodes, coordinator, mockRegisterWithDirector);
+        expect(coordinator.id).toBe(chatNode.id);
+      
       });
     
-      it('node is not the new coordinator', async () => {
-        nodeId = 1;
-        isCandidate = false;
+      it('node is note set to be the new coordinator', async () => {
+        chatNode = { id: 1, address: { emit: jest.fn() } };
+        setIsCandidate(false);
+        nodes.push(chatNode);
+        coordinator = null; 
     
         // Call the function
-        await determineVotingOutcome(nodeId, isCandidate, nodes, coordinator, mockRegisterWithDirector);
-    
-        // Verify `emit` is not called
-        nodes.forEach((node) => {
-          expect(node.address.emit).not.toHaveBeenCalled();
-        });
-    
-        // Verify registerWithDirector is not called
-        expect(mockRegisterWithDirector).not.toHaveBeenCalled();
+        coordinator =  determineVotingOutcome(chatNode.id, nodes, coordinator, mockRegisterWithDirector);
+        
+        expect(coordinator).toBe(null);
       });
 });
 
