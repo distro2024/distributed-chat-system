@@ -55,17 +55,17 @@ io.on('connection', (socket) => {
   // A vote is received from another node
   socket.on('vote', (voterId) => {
     console.log(`Received vote from ${voterId}`); //remove
-    handleIncomingVote(voterId);
+    handleIncomingVote(voterId, nodes);
   });
   // A new coordinator is elected
   socket.on('update-coordinator', (newCoordinatorId) => {
     console.log(`Received new coordinator: ${newCoordinatorId}`); // remove
-    handleNewCoordinator(newCoordinatorId);
+    handleNewCoordinator(nodeId, newCoordinatorId, nodes, coordinator, registerWithDirector);
   });
   // An election request is received
   socket.on('election', (coordinatorCandidateId) => {
     console.log(`Received election request`); // remove
-    sendElectionResponse(coordinatorCandidateId);
+    sendElectionResponse(nodeId, nodes, coordinatorCandidateId, coordinator, registerWithDirector);
   });
 });
 
