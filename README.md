@@ -6,10 +6,32 @@ A brief introductory text here. Perhaps main project links
 
 
 
-## Installation
+## Running the application
 
-Detailed installation instructions here (such that people with diverse backgrounds and various skill levels can easily fire up the project). 
+### System requirements 
 
+Running this application required version `x.x.x` of node.js and version `x.x.x` of npm. 
+
+### Installation
+
+Start by cloning the application from the default branch (main) of the GitHub -repository with `git clone`.
+
+The application has two modules: `director` and `node`. For each of these you need to install required dependencies. 
+
+#### Node
+Mode to the subdirectory `./node` and run the command `npm install`. To verify that everything is working correctly, run the unittests with `npm test`.
+
+#### Director
+Mode to the subdirectory `./director` and run the command `npm install`. To verify that everything is working correctly, run the unittests with `npm test`.
+
+
+
+## Instruction for developers
+
+### Linter
+The team uses eslint for linting and it is included as a dependency. 
+- It is recommended that all team members use when possible plugins for their IDEs to automatically lint the code. 
+- Alternatively linting can be done with the command `npm lint`
 
 ## Quick tutorial how to use
 
