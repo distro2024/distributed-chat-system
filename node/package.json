@@ -5,7 +5,7 @@
     "main": "node.js",
     "scripts": {
         "start": "node node.js",
-        "test": "jest"
+        "test": "jest --verbose"
     },
     "dependencies": {
         "axios": "^0.21.1",
