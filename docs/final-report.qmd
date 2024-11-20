@@ -46,6 +46,33 @@ Terminology:
 
 ![Basic case](./img/basic_case.png)
 
+### nodes (aka Chat-nodes)
+
+Each node participating in the discussion is a chat-node. Nodes have an identical structure and have an identical state
+
+#### Node state 
+
+Each node stores information of all nodes in the network. For each node, the id of the node and an instance of `socket.io-client` is stored into the object. 
+
+```json
+[
+    {
+        "id": "uuid",
+        "address": "io(address)"
+    }
+]
+```
+
+Storing `socket.io-client` to each node helps us streamline the communication, as now we can send a message to all nodes with: 
+
+```javascript
+nodes.foreach(nodes) => {
+    // check that the node.id is not the id of the sender
+    // carry out an operation
+    node.address.emit('path', body)
+}
+```
+
 ### Coordinator node
 
 Mechanisms will be in place to handle situations where nodes join or leave the discussion and to resolve any discrepancies in discussion histories among nodes. The team has chosen to implement a coordinator role and an election process initially based on the bully algorithm. The elected coordinator has several duties. It:
@@ -197,3 +224,5 @@ The team maintains active communication through a group discussion on Telegram. 
 ## Use of LLMs 
 
 University of Helsinki Large Language Model Curre, Microsoft Co-pilot and Chat-GPT have been used to help improve the grammar of the documentation and to polish the text. Separate LLMs have been prompted to provide feedback on text and to suggest improvements. The response has then been evaualuated and with consideration applied to improve the text. 
+
+
