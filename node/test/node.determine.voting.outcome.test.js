@@ -1,7 +1,6 @@
-const e = require('express');
-const { initiateElection, determineVotingOutcome } = require('../election');
+const { determineVotingOutcome, setIsCandidate } = require('../election');
 
-describe('initiateElection', () => {
+describe('determineVotingOutcome', () => {
     let thisNode;
     let nodes;
     let coordinator;
@@ -23,7 +22,7 @@ describe('initiateElection', () => {
     });
 
     it('node is Set as the new coordinator', async () => {
-        thisNode = { id: 4, address: { emit: jest.fn() } };
+        thisNode = { id: 5, address: { emit: jest.fn() } };
         setIsCandidate(true);
         nodes.push(thisNode);
         coordinator = null; 

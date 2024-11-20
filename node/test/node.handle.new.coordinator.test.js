@@ -1,10 +1,4 @@
-jest.mock('../election', () => ({
-    ...jest.requireActual('../election'),
-    initiateElection: jest.fn(),
-}));
-
-const e = require('express');
-const { getIsCandidate, setIsCandidate, handleNewCoordinator, initiateElection } = require('../election');
+const { getIsCandidate, setIsCandidate, handleNewCoordinator } = require('../election');
 
 
 describe('determineVotingOutcome', () => {

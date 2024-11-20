@@ -1,4 +1,3 @@
-const e = require('express');
 const { getIsCandidate, setIsCandidate, handleIncomingVote } = require('../election');
 
 describe('determineVotingOutcome', () => {
