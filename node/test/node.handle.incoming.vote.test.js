@@ -1,7 +1,6 @@
-const e = require('express');
 const { getIsCandidate, setIsCandidate, handleIncomingVote } = require('../election');
 
-describe('determineVotingOutcome', () => {
+describe('When a vote arrives from another node,', () => {
     let nodes;
     
     beforeEach(() => {
@@ -12,7 +11,7 @@ describe('determineVotingOutcome', () => {
         
     });
 
-    it('incoming vote from higher id node in the network sets is candidate to false', async () => {
+    it('if the vote is from higher id node, is candidate is set to false', async () => {
         setIsCandidate(true);
 
         handleIncomingVote(2, 3, nodes);
