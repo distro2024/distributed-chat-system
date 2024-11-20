@@ -20,10 +20,10 @@ Start by cloning the application from the default branch (main) of the GitHub -r
 The application has two modules: `director` and `node`. For each of these you need to install required dependencies. 
 
 #### Node
-Mode to the subdirectory `./node` and run the command `npm install`. To verify that everything is working correctly, run the unittests with `npm test`.
+Move to the subdirectory `./node` and run the command `npm install`. To verify that everything is working correctly, run the unittests with `npm test`.
 
 #### Director
-Mode to the subdirectory `./director` and run the command `npm install`. To verify that everything is working correctly, run the unittests with `npm test`.
+Move to the subdirectory `./director` and run the command `npm install`. To verify that everything is working correctly, run the unittests with `npm test`.
 
 
 
