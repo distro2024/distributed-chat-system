@@ -20,10 +20,30 @@ Start by cloning the application from the default branch (main) of the GitHub -r
 The application has two modules: `director` and `node`. For each of these you need to install required dependencies. 
 
 #### Node
-Move to the subdirectory `./node` and run the command `npm install`. To verify that everything is working correctly, run the unittests with `npm test`.
+Move to the subdirectory `./node` and run the command 
+
+```bash
+npm install
+```
+
+To verify that everything is working correctly, run the unittests with 
+
+```bash
+npm test
+```
 
 #### Director
-Move to the subdirectory `./director` and run the command `npm install`. To verify that everything is working correctly, run the unittests with `npm test`.
+Move to the subdirectory `./director` and run the command 
+
+```bash
+npm install
+```
+
+To verify that everything is working correctly, run the unittests with 
+
+```bash
+npm test
+```
 
 
 
@@ -32,7 +52,7 @@ Move to the subdirectory `./director` and run the command `npm install`. To veri
 ### Linter
 The team uses eslint for linting and it is included as a dependency. 
 - It is recommended that all team members use when possible plugins for their IDEs to automatically lint the code. 
-- Alternatively linting can be done with the command `npm eslint`
+- Alternatively linting can be done with the command `npm eslint` (it's good to use CLI eslint in any case to see open issues)
 
 ### Unittests
 The team should write code in a manner that supports unittesting of different functionalities. With a proof-of-concept deadlines are tight and workhours low, so sometimes compromises have to be made. As saifguards we follow these steps:
