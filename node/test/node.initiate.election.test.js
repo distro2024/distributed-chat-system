@@ -4,7 +4,7 @@ jest.useFakeTimers();
 jest.spyOn(global, 'setTimeout');
 
 
-describe('determineVotingOutcome', () => {
+describe('When node initiates an election', () => {
     let chatNode;
     let nodes;
     let coordinator;
@@ -24,7 +24,7 @@ describe('determineVotingOutcome', () => {
         setIsCandidate(false);
     });
 
-    it('timer waits for 3 seconds', async () => {
+    it('timer is set to wait responses for 3 seconds', async () => {
         thisNode = { id: 5, address: { emit: jest.fn() } };
         initiateElection(thisNode.id, nodes, coordinator, mockRegisterWithDirector);
 
@@ -33,7 +33,7 @@ describe('determineVotingOutcome', () => {
     });
     
 
-    it('isCandidate is set to true', async () => {
+    it('node is set to be a candidate for a new coordinator', async () => {
         thisNode = { id: 5, address: { emit: jest.fn() } };
         
         expect(getIsCandidate()).toBe(false);
@@ -42,7 +42,7 @@ describe('determineVotingOutcome', () => {
         expect(getIsCandidate()).toBe(true);
     });
 
-    it('only nodes with higher id are challenged', async () => {
+    it('node challenges only higher id nodes for the position of coordinator', async () => {
         thisNode = { id: 3, address: { emit: jest.fn() } };
         
         expect(getIsCandidate()).toBe(false);

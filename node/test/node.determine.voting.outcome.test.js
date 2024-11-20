@@ -1,6 +1,6 @@
 const { determineVotingOutcome, setIsCandidate } = require('../election');
 
-describe('determineVotingOutcome', () => {
+describe('When voting outcome is determined', () => {
     let thisNode;
     let nodes;
     let coordinator;
@@ -21,7 +21,7 @@ describe('determineVotingOutcome', () => {
         mockRegisterWithDirector = jest.fn();
     });
 
-    it('node is Set as the new coordinator', async () => {
+    it('if the node is a candidate, it is set as the new coordinator', async () => {
         thisNode = { id: 5, address: { emit: jest.fn() } };
         setIsCandidate(true);
         nodes.push(thisNode);
@@ -32,7 +32,7 @@ describe('determineVotingOutcome', () => {
       
       });
     
-      it('node is note set to be the new coordinator', async () => {
+      it('if the is not a candidate, the node is not set to be the new coordinator', async () => {
         thisNode = { id: 1, address: { emit: jest.fn() } };
         setIsCandidate(false);
         nodes.push(thisNode);

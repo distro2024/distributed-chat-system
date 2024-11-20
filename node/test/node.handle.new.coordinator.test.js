@@ -1,7 +1,7 @@
 const { getIsCandidate, setIsCandidate, handleNewCoordinator } = require('../election');
 
 
-describe('determineVotingOutcome', () => {
+describe('When a new coordinator has been elected', () => {
     let nodes;
     let mockRegisterWithDirector;
     
@@ -15,7 +15,7 @@ describe('determineVotingOutcome', () => {
         mockRegisterWithDirector = jest.fn();
     });
 
-    it('a higher id node has declared itself to be a coordinator', async () => {
+    it('if a higher id node declares itself to be a coordinator, accept', async () => {
         setIsCandidate(true);
 
         const coordinator = handleNewCoordinator(1, 2, nodes, null, mockRegisterWithDirector);
