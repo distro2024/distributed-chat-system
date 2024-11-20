@@ -3,7 +3,10 @@ const axios = require("axios")
 const http = require("http")
 const { v4: uuidv4 } = require("uuid")
 const path = require("path")
-const io = require("socket.io-client"); // check naming
+
+// Do we need this
+const ioClient = require("socket.io-client"); // check naming
+
 const { 
   initiateElection, 
   handleIncomingVote, 
@@ -23,7 +26,7 @@ const IS_LEADER = process.env.IS_LEADER === "true"
 
 const app = express()
 const server = http.createServer(app)
-const io = socketIo(server); // initialize socket.io with the server
+const ioServer = socketIo(server); // initialize socket.io with the server
 
 app.use(express.static(path.join(__dirname, "public")))
 app.use(express.json())
@@ -44,7 +47,7 @@ let nodes = []
 // vector clock for the consistency of the chat
 let vectorClock = {nodeId: 0} // Initialize the vector clock with the current node's ID
 
-io.on('connection', (socket) => {
+ioServer.on('connection', (socket) => {
   console.log('a user connected'); //remove
 
   socket.on('message', (msg) => {
