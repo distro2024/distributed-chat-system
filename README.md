@@ -54,7 +54,7 @@ The team uses eslint for linting and it is included as a dependency.
 
 ### Unittests
 The team should write code in a manner that supports unittesting of different functionalities. With a proof-of-concept deadlines are tight and workhours low, so sometimes compromises have to be made. As saifguards we follow these steps:
-- Unittest whenever possible
+- write Unittests whenever possible (the team uses jest)
 - If you cannot unittest:  
   - verify with end-to-end testing that your code works
   - write clean code so that others can understand your intentions
