@@ -45,9 +45,7 @@ To verify that everything is working correctly, run the unittests with
 npm test
 ```
 
-
-
-## Instruction for developers
+## Instructions for developers
 
 ### Linter
 The team uses eslint for linting and it is included as a dependency. 
