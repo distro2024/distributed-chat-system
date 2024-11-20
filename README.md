@@ -1,9 +1,10 @@
 # Distributed Chat System 
 
-A brief introductory text here. Perhaps main project links
+Documents required for project evaluation
 - [Work Plan](./docs/work-plan.md)
-- Definition of Done(?)
+- [Final report](./docs/final-report.qmd)
 
+> Note: The final report was written with [quarto](https://quarto.org/) for better markdown-to-pdf support. This affects the reading experience in GitHub markdown format. 
 
 
 ## Running the application
