@@ -23,7 +23,7 @@ app.post('/register_node', async (req, res) => {
     if (currentLeader) {
         try {
             const response = await axios.post(`${currentLeader.leaderAddress}/register_node`, { nodeId, nodeAddress, publicAddress });
-            res.json(response.data); // send the list of neighbours to the node
+            res.sendStatus(200);
         } catch (err) {
             console.error('Error forwarding registration to leader:', err.message);
             res.status(500).send('Failed to register node with leader');

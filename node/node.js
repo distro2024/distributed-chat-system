@@ -3,7 +3,7 @@ const axios = require("axios")
 const http = require("http")
 const { v4: uuidv4 } = require("uuid")
 const path = require("path")
-const io = require("socket.io-client"); // check naming
+const clientIo = require("socket.io-client"); // check naming
 const { 
   initiateElection, 
   handleIncomingVote, 
@@ -23,7 +23,7 @@ const IS_LEADER = process.env.IS_LEADER === "true"
 
 const app = express()
 const server = http.createServer(app)
-const io = socketIo(server); // initialize socket.io with the server
+const serverIo = socketIo(server); // initialize socket.io with the server
 
 app.use(express.static(path.join(__dirname, "public")))
 app.use(express.json())
@@ -32,8 +32,7 @@ const nodeId = uuidv4()
 
 // For now, node1 is always the leader based on the IS_LEADER environment variable
 
-let coordinator = null
-let isCoordinator = IS_LEADER // testing
+let isCoordinator = false
 let coordinatorId = isCoordinator ? nodeId : null
 let coordinatorAddress = IS_LEADER ? NODE_HOST : null
 let coordinatorPublicAddress = IS_LEADER ? PUBLIC_HOST : null
@@ -44,8 +43,8 @@ let nodes = []
 // vector clock for the consistency of the chat
 let vectorClock = {nodeId: 0} // Initialize the vector clock with the current node's ID
 
-io.on('connection', (socket) => {
-  console.log('a user connected'); //remove
+serverIo.on('connection', (socket) => {
+  console.log('listening sockets'); //remove
 
   socket.on('message', (msg) => {
     console.log(`Received message: ${msg}`); //remove
@@ -79,14 +78,13 @@ io.on('connection', (socket) => {
 
 app.post("/register_node", (req, res) => {
   const { nodeId, nodeAddress, publicAddress } = req.body
-  const neighbours = [...nodes] // exclude the node who is getting neighbours
 
   nodes.push({ nodeId, nodeAddress, publicAddress })
   console.log(
     `Leader received registration from node: ${nodeId}, internal address ${nodeAddress}, public address ${publicAddress}`
   )
 
-  res.json({ neighbours })
+  res.json({ nodes })
 })
 
 const sendHeartbeatToDirector = async () => {
@@ -108,16 +106,32 @@ const sendHeartbeatToDirector = async () => {
 
 const registerWithDirector = async () => {
   try {
-    const neighbours = await axios.post(`${DIRECTOR_URL}/register_node`, {
+    const coordinator = await axios.post(`${DIRECTOR_URL}/register_node`, {
       nodeId,
-      nodeAddress: NODE_HOST,
-      publicAddress: PUBLIC_HOST,
+      address: NODE_HOST,
     })
     console.log("Registered with director")
-    nodes = neighbours.data.neighbours; // save neighbours
+
+    isCoordinator = nodeId === coordinator.nodeId
+    coordinatorId = coordinator.nodeId
+    coordinatorAddress = coordinator.address
+    
+    if (!isCoordinator) {
+      // TODO handle joining the chat
+      // Pekka
+      //handleNeighbours()
+      // const node = {
+      //   nodeId,
+      //   address: io(),
+      // }
+    }
+    
+
   } catch (error) {
     console.error("Error registering with director:", error.message)
   }
+
+
 }
 
 
@@ -141,8 +155,8 @@ if (isCoordinator) {
 }
 
 registerWithDirector()
-
-setInterval(sendHeartbeatToDirector, 5000)
+//
+//setInterval(sendHeartbeatToDirector, 5000)
 
 server.listen(PORT, () => {
   console.log(`Node service is running on port ${PORT}`)
