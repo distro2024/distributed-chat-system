@@ -158,6 +158,50 @@ registerWithDirector()
 //
 //setInterval(sendHeartbeatToDirector, 5000)
 
+// HEARBEATS 
+
+// GLOBAL VARIABLES (IN FUTURE CAN BE MOVED TO ENVIRONMENTAL VARIABLES)
+// variable to indicate how many heartbeats can be missed before initiating an election
+const maxMissedHeartbeats = 2;
+// variable to indicate the T time in milliseconds for the heartbeat
+const heartbeatInterval = 5000;
+
+// each node excluding coordinator sends a heartbeat to the coordinator 
+// in a random interval within T-2T seconds, like in RAFT algorithm. 
+// If responses to two consecutive heartbeats are not received, 
+// the coordinator is considered dead and an election is initiated
+
+// Randomize the heartbeat interval for each node within the range of T-2T milliseconds
+const thisNodesHeartbeatInterval = Math.floor(Math.random() * heartbeatInterval) + heartbeatInterval;
+setInterval(sendHeartbeatToCoordinator, );
+
+// Global counter for missed heartbeats
+let missedHeartbeats = 0;
+
+// Use axios to send a heartbeat to the coordinator
+// if response is 200 OK, reset the missedHeartbeats counter
+const sendHeartbeatToCoordinator = async () => {
+  try {
+    const response = await axios.post(`${coordinatorAddress}/heartbeat`, {
+      nodeId,
+    })
+    if (response.status === 200) {
+      // reset the missedHeartbeats counter
+      missedHeartbeats = 0;
+    } else {
+      // increment the missedHeartbeats counter
+      missedHeartbeats++;
+    }
+  } catch (error) {
+    // in case of an error, increment the missedHeartbeats counter
+    missedHeartbeats++;
+  }
+  if (missedHeartbeats >= maxMissedHeartbeats) {
+    initiateElection(nodeId, nodes, coordinator, registerWithDirector);
+  }
+}
+
+
 server.listen(PORT, () => {
   console.log(`Node service is running on port ${PORT}`)
   if (!isCoordinator) {
