@@ -1,7 +1,7 @@
 # Distributed Chat System 
 
 Documents required for project evaluation
-- Work Plan [pdf](./docs/work-plan.pdf) / [md](./docs/work-plan.pdf)
+- Work Plan [pdf](./docs/work-plan.pdf) / [md](./docs/work-plan.md)
 - Final report [pdf](./docs/final-report.pdf) / [qmd](./docs/final-report.qmd)
 
 > Note: The final report was written with [quarto](https://quarto.org/) for better markdown-to-pdf support. This affects the reading experience in GitHub markdown format. 
