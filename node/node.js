@@ -207,26 +207,24 @@ let missedHeartbeats = 0;
 // Use axios to send a heartbeat to the coordinator
 // if response is 200 OK, reset the missedHeartbeats counter
 const sendHeartbeatToCoordinator = async () => {
-  try {
-    //
-    // PEKKA: Is POST/nodeId necessary here or would just GET be sufficient?
-    //
-    const response = await axios.post(`http://${coordinatorAddress}/heartbeat`, {
-      nodeId,
-    })
-    if (response.status === 200) {
-      // reset the missedHeartbeats counter
-      missedHeartbeats = 0;
-    } else {
-      // increment the missedHeartbeats counter
+  if (!isCoordinator) {
+    try {
+      // send a GET request to the coordinator's heartbeat endpoint
+      const response = await axios.get(`http://${coordinatorAddress}/heartbeat`)
+      if (response.status === 200) {
+        // reset the missedHeartbeats counter
+        missedHeartbeats = 0;
+      } else {
+        // increment the missedHeartbeats counter
+        missedHeartbeats++;
+      }
+    } catch (error) {
+      // in case of an error, increment the missedHeartbeats counter
       missedHeartbeats++;
     }
-  } catch (error) {
-    // in case of an error, increment the missedHeartbeats counter
-    missedHeartbeats++;
-  }
-  if (missedHeartbeats >= maxMissedHeartbeats) {
-    initiateElection(nodeId, nodes, coordinator, registerWithDirector);
+    if (missedHeartbeats >= maxMissedHeartbeats) {
+      initiateElection(nodeId, nodes, coordinator, registerWithDirector);
+    }
   }
 }
 
