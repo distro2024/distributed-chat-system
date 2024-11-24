@@ -3,7 +3,7 @@ const axios = require("axios")
 const http = require("http")
 const { v4: uuidv4 } = require("uuid")
 const path = require("path")
-const clientIo = require("socket.io-client"); // check naming
+const clientIo = require("socket.io-client");
 const { 
   initiateElection, 
   handleIncomingVote, 
@@ -14,9 +14,9 @@ const socketIo = require("socket.io");
 const {handleNewMessage} = require('./handleNewMessage');
 
 const PORT = process.env.PORT || 4000
-const DIRECTOR_URL = process.env.DIRECTOR_URL || "http://localhost:3000"
-const NODE_HOST = process.env.NODE_HOST || `http://localhost:${PORT}`
-const PUBLIC_HOST = process.env.PUBLIC_HOST || `http://localhost:${PORT}`
+const DIRECTOR_URL = process.env.DIRECTOR_URL || "localhost:3000"
+const NODE_HOST = process.env.NODE_HOST || `localhost:${PORT}`
+const PUBLIC_HOST = process.env.PUBLIC_HOST || `localhost:${PORT}`
 
 // Using IS_LEADER environment variable to simulate leader election
 const IS_LEADER = process.env.IS_LEADER === "true"
@@ -76,16 +76,39 @@ serverIo.on('connection', (socket) => {
   });
 });
 
-app.post("/register_node", (req, res) => {
-  const { nodeId, nodeAddress, publicAddress } = req.body
+//app.post("/register_node", (req, res) => {
+//  const { nodeId, nodeAddress, publicAddress } = req.body
+//
+//  nodes.push({ nodeId, nodeAddress, publicAddress })
+//  console.log(
+//    `Leader received registration from node: ${nodeId}, internal address ${nodeAddress}, public address ${publicAddress}`
+//  )
+//
+//  res.json({ nodes })
+//})
 
-  nodes.push({ nodeId, nodeAddress, publicAddress })
-  console.log(
-    `Leader received registration from node: ${nodeId}, internal address ${nodeAddress}, public address ${publicAddress}`
-  )
+app.post('/onboard_node', (req, res) => {
+  // onboarding a new node to chat
+  const newNode = req.body;
 
-  res.json({ nodes })
-})
+  console.log(`Onboarding new node: ${newNode.nodeAddress}`);
+
+  // prepare current node list for transport
+  const neighbours = nodes.map(node => ({
+    nodeId: node.nodeId,
+    address: node.nodeAddress.io.uri
+  }));
+
+  // save the onboarding node to the list
+  nodes.push({
+    nodeId: newNode.nodeId,
+    nodeAddress: clientIo(`ws://${newNode.nodeAddress}`)
+  });
+
+  console.log(`New node onboarded: ${newNode.nodeAddress}`);
+
+  res.json({ neighbours });
+});
 
 const sendHeartbeatToDirector = async () => {
   if (isCoordinator) {
@@ -105,35 +128,40 @@ const sendHeartbeatToDirector = async () => {
 }
 
 const registerWithDirector = async () => {
+  // node discovery via Node Director
   try {
-    const coordinator = await axios.post(`${DIRECTOR_URL}/register_node`, {
+    const newNode = {
       nodeId,
-      address: NODE_HOST,
-    })
-    console.log("Registered with director")
-
-    isCoordinator = nodeId === coordinator.nodeId
-    coordinatorId = coordinator.nodeId
-    coordinatorAddress = coordinator.address
-    
-    if (!isCoordinator) {
-      // TODO handle joining the chat
-      // Pekka
-      //handleNeighbours()
-      // const node = {
-      //   nodeId,
-      //   address: io(),
-      // }
+      nodeAddress: NODE_HOST,
     }
-    
+    const response = await axios.post(`http://${DIRECTOR_URL}/join_chat`, newNode)
+    const coordinator = response.data.coordinator
 
+    console.log("Registered with Node Director")
+
+    // check whether I'm the coordinator
+    isCoordinator = nodeId === coordinator.nodeId
+    // save the coordinator information
+    coordinatorId = coordinator.nodeId
+    coordinatorAddress = coordinator.nodeAddress
+
+    // if I'm not the coordinator, onboard with the coordinator
+    if (!isCoordinator) {
+      const response = await axios.post(`http://${coordinatorAddress}/onboard_node`, newNode);
+      const neighbours = response.data.neighbours;
+
+      // save the neighbours
+      neighbours.forEach(neighbour => {
+        nodes.push({
+          nodeId: neighbour.nodeId,
+          nodeAddress: clientIo(`ws://${neighbour.nodeAddress}`)
+        })
+      });
+    }
   } catch (error) {
     console.error("Error registering with director:", error.message)
   }
-
-
 }
-
 
 const sendNewMessage = async (message) => {
   // Increment the local vector clock
@@ -159,25 +187,20 @@ registerWithDirector()
 //setInterval(sendHeartbeatToDirector, 5000)
 
 // HEARBEATS 
-
 // GLOBAL VARIABLES (IN FUTURE CAN BE MOVED TO ENVIRONMENTAL VARIABLES)
 // variable to indicate how many heartbeats can be missed before initiating an election
 const maxMissedHeartbeats = 2;
 // variable to indicate the T time in milliseconds for the heartbeat
 const heartbeatInterval = 5000;
-
 // each node excluding coordinator sends a heartbeat to the coordinator 
 // in a random interval within T-2T seconds, like in RAFT algorithm. 
 // If responses to two consecutive heartbeats are not received, 
 // the coordinator is considered dead and an election is initiated
-
 // Randomize the heartbeat interval for each node within the range of T-2T milliseconds
 const thisNodesHeartbeatInterval = Math.floor(Math.random() * heartbeatInterval) + heartbeatInterval;
 setInterval(sendHeartbeatToCoordinator, );
-
 // Global counter for missed heartbeats
 let missedHeartbeats = 0;
-
 // Use axios to send a heartbeat to the coordinator
 // if response is 200 OK, reset the missedHeartbeats counter
 const sendHeartbeatToCoordinator = async () => {
@@ -201,6 +224,13 @@ const sendHeartbeatToCoordinator = async () => {
   }
 }
 
+
+
+// Add the node itself to the list of nodes
+nodes.push({
+  nodeId,
+  nodeAddress: clientIo(`ws://${NODE_HOST}`)
+});
 
 server.listen(PORT, () => {
   console.log(`Node service is running on port ${PORT}`)
