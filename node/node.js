@@ -76,6 +76,10 @@ serverIo.on('connection', (socket) => {
   });
 });
 
+//
+// COORDINATOR TASKS
+//
+
 app.post('/onboard_node', (req, res) => {
   // onboarding a new node to chat
   const newNode = req.body;
@@ -98,6 +102,16 @@ app.post('/onboard_node', (req, res) => {
 
   res.json({ neighbours });
 });
+
+app.post('/heartbeat', (req, res) => {
+  console.log(`Received heartbeat from node: ${req.body.nodeId}`);
+
+  res.sendStatus(200);
+});
+
+//
+// END OF COORDINATOR TASKS
+//
 
 const sendHeartbeatToDirector = async () => {
   if (isCoordinator) {
@@ -187,14 +201,17 @@ const heartbeatInterval = 5000;
 // the coordinator is considered dead and an election is initiated
 // Randomize the heartbeat interval for each node within the range of T-2T milliseconds
 const thisNodesHeartbeatInterval = Math.floor(Math.random() * heartbeatInterval) + heartbeatInterval;
-setInterval(sendHeartbeatToCoordinator, );
+
 // Global counter for missed heartbeats
 let missedHeartbeats = 0;
 // Use axios to send a heartbeat to the coordinator
 // if response is 200 OK, reset the missedHeartbeats counter
 const sendHeartbeatToCoordinator = async () => {
   try {
-    const response = await axios.post(`${coordinatorAddress}/heartbeat`, {
+    //
+    // PEKKA: Is POST/nodeId necessary here or would just GET be sufficient?
+    //
+    const response = await axios.post(`http://${coordinatorAddress}/heartbeat`, {
       nodeId,
     })
     if (response.status === 200) {
@@ -213,7 +230,7 @@ const sendHeartbeatToCoordinator = async () => {
   }
 }
 
-
+setInterval(sendHeartbeatToCoordinator, thisNodesHeartbeatInterval);
 
 // Add the node itself to the list of nodes
 nodes.push({

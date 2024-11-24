@@ -27,6 +27,22 @@ app.post('/join_chat', async (req, res) => {
   res.json({ coordinator });
 });
 
+app.post('/update_coordinator', async (req, res) => {
+  // update the coordinator
+  const { nodeId, nodeAddress } = req.body;
+
+  console.log('Coordinator update request received from node with ID:', nodeId);
+
+  coordinator = {
+    nodeId,
+    nodeAddress
+  };
+
+  console.log('Coordinator updated.');
+
+  res.sendStatus(200);
+});
+
 app.listen(PORT, () => {
   console.log(`Director service is running on port ${PORT}`);
 });
