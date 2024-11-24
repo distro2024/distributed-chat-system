@@ -76,17 +76,6 @@ serverIo.on('connection', (socket) => {
   });
 });
 
-//app.post("/register_node", (req, res) => {
-//  const { nodeId, nodeAddress, publicAddress } = req.body
-//
-//  nodes.push({ nodeId, nodeAddress, publicAddress })
-//  console.log(
-//    `Leader received registration from node: ${nodeId}, internal address ${nodeAddress}, public address ${publicAddress}`
-//  )
-//
-//  res.json({ nodes })
-//})
-
 app.post('/onboard_node', (req, res) => {
   // onboarding a new node to chat
   const newNode = req.body;
