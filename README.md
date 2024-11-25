@@ -45,6 +45,23 @@ To verify that everything is working correctly, run the unittests with
 npm test
 ```
 
+### Local testing
+
+To test the application locally, start new terminals for director and as many nodes as you want. Start the director with
+```
+node director.js
+```
+
+In different terminal windows/panes start each node by providing a port of your choosing, for instance:
+```
+PORT=6541 node node.js
+PORT=6542 node node.js
+...
+PORT=654x node node.js
+```
+
+In terminal windows you can follow the messages between nodes and the director. You can test the chat-features by navigating to localhost:PORT (for each node). 
+
 ## Instructions for developers
 
 ### Linter
