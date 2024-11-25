@@ -3,23 +3,23 @@ let isCandidate = false;
 
 /**
  * Send a message to all nodes to elect a new coordinator
- * @param {*} nodeId the id of the node initiating the election
+ * @param {*} thisNodeId the id of the node initiating the election
  * @param {*} nodes a list of all nodes in the network
- * @param {*} coordinator the current coordinator
+ * @param {*} coordinator the id and address of the current coordinator
  */
-const initiateElection = (nodeId, nodes, coordinator, registerWithDirector) => {
+const initiateElection = (thisNodeId, nodes, coordinator, registerWithDirector) => {
     isCandidate = true;
     nodes.forEach((node) => {
       // Sends a message through a web socket to a node
       // requesting a vote for a new coordinator
-      if (node.id > nodeId) {
-        node.address.emit('election', nodeId);
+      if (node.nodeId > thisNodeId) {
+        node.nodeAddress.emit('election', thisNodeId);
       }
   
     })
     // Wait for three seconds to receive votes from other nodes
     setTimeout(() =>
-        coordinator = determineVotingOutcome(nodeId, nodes, coordinator, registerWithDirector),
+        coordinator = determineVotingOutcome(thisNodeId, nodes, coordinator, registerWithDirector),
         3000
     );
     
@@ -29,19 +29,20 @@ const initiateElection = (nodeId, nodes, coordinator, registerWithDirector) => {
   
 /**
  * Determine the outcome of the election
- * @param {*} nodeId the id of this node
+ * @param {*} thisNodeId the id of this node
  * @param {*} nodes a list of all nodes in the network
- * @param {*} coordinator coordinator of the network
+ * @param {*} coordinator id and the address of the coordinator
  * @param {*} registerWithDirector Function to register with the Node Director
  */
-const determineVotingOutcome = (nodeId, nodes, coordinator, registerWithDirector) => {
+const determineVotingOutcome = (thisNodeId, nodes, coordinator, registerWithDirector) => {
     if (isCandidate) {
         // set this node as the new coordinator
-        coordinator = nodes.find(node => node.id === nodeId)
+        coordinator = nodes.find(node => node.nodeId === thisNodeId)
+        
         // send a message to all nodes to update their coordinator
         nodes.forEach((node) => {
-            if (node.id != nodeId) {
-                node.address.emit('update-coordinator', { nodeId });
+            if (node.nodeId != thisNodeId) {
+                node.nodeAddress.emit('update-coordinator', { nodeId: thisNodeId });
             }
         })
         // send a message to the director to update the coordinator
@@ -53,13 +54,13 @@ const determineVotingOutcome = (nodeId, nodes, coordinator, registerWithDirector
 
 /**
  * Handle an incoming election vote from another node
-* @param {any} nodeId - the id of the node
+* @param {any} thisNodeId - the id of the node
 * @param {any} voterId - The node that sent the vote
  * @param {any} nodes - A list of all nodes in the network
  */
-const handleIncomingVote = (nodeId, voterId, nodes) => {
-    const nodeExists = nodes.some(node => node.id === voterId);
-    if (nodeExists && voterId > nodeId) {
+const handleIncomingVote = (thisNodeId, voterId, nodes) => {
+    const nodeExists = nodes.some(node => node.nodeId === voterId);
+    if (nodeExists && voterId > thisNodeId) {
         isCandidate = false;
     }
 }
@@ -68,21 +69,21 @@ const handleIncomingVote = (nodeId, voterId, nodes) => {
  * A node has elected itself as the new coordinator. Update the
  * Coordinator information. If this node has higher id, challenge
  * the new coordinator
- * @param {*} nodeId id of the node 
+ * @param {*} thisNodeId id of the node 
  * @param {*} newCoordinatorId id of the new coordinator
  * @param {*} nodes A list of all nodes in the network
  * @param {*} coordinator The current coordinator
  * @param {*} registerWithDirector Function to register with the Node Director
  */
-const handleNewCoordinator = (nodeId, newCoordinatorId, nodes, coordinator, registerWithDirector) => {
+const handleNewCoordinator = (thisNodeId, newCoordinatorId, nodes, coordinator, registerWithDirector) => {
 // If the new coordinator has a higher id relinquish coordinator status
 // Else challenge the new coordinator
-    const nodeExists = nodes.some(node => node.id === newCoordinatorId);
-    if (nodeExists && newCoordinatorId > nodeId) {
+    const nodeExists = nodes.some(node => node.nodeId === newCoordinatorId);
+    if (nodeExists && newCoordinatorId > thisNodeId) {
         isCandidate = false;
-        coordinator = nodes.find(node => node.id === newCoordinatorId);
+        coordinator = nodes.find(node => node.nodeId === newCoordinatorId);
     } else {
-        coordinator = initiateElection(nodeId, nodes, coordinator, registerWithDirector);
+        coordinator = initiateElection(thisNodeId, nodes, coordinator, registerWithDirector);
     }
 
     return coordinator; 
@@ -91,15 +92,15 @@ const handleNewCoordinator = (nodeId, newCoordinatorId, nodes, coordinator, regi
 /**
  * Send a response to an incoming election request and
  * become a candidate by initiating an election 
- * @param {*} nodeId id of the node
+ * @param {*} thisNodeId id of the node
  * @param {*} nodes A list of all nodes in the network
  * @param {*} candidateId id of the candidate
  * @param {*} coordinator The current coordinator
  * @param {*} registerWithDirector Function to register with the Node Director
  */
-const sendElectionResponse = async (nodeId, nodes, candidateId, coordinator, registerWithDirector) => {
-    candidateId.address.emit('submit-vote', nodeId);
-    initiateElection(nodeId, nodes, coordinator, registerWithDirector);
+const sendElectionResponse = async (thisNodeId, nodes, candidateId, coordinator, registerWithDirector) => {
+    candidateId.address.emit('submit-vote', thisNodeId);
+    return initiateElection(thisNodeId, nodes, coordinator, registerWithDirector);
 }
 
 /**
