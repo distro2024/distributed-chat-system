@@ -10,23 +10,21 @@ let isCandidate = false;
 const initiateElection = (nodeId, nodes, coordinator, registerWithDirector) => {
     isCandidate = true;
     nodes.forEach((node) => {
-      // Sends a message through a web socket to a node
-      // requesting a vote for a new coordinator
-      if (node.id > nodeId) {
-        node.address.emit('election', nodeId);
-      }
-  
+        // Sends a message through a web socket to a node
+        // requesting a vote for a new coordinator
+        if (node.nodeId > nodeId && node.socket) {
+            node.socket.emit('election', nodeId);
+        }
     })
     // Wait for three seconds to receive votes from other nodes
-    setTimeout(() =>
-        coordinator = determineVotingOutcome(nodeId, nodes, coordinator, registerWithDirector),
-        3000
-    );
-    
-    return coordinator; 
-    
+    setTimeout(() => {
+        coordinator = determineVotingOutcome(nodeId, nodes, coordinator, registerWithDirector);
+    }, 3000);
+
+    return coordinator;
+
 }
-  
+
 /**
  * Determine the outcome of the election
  * @param {*} nodeId the id of this node
@@ -37,13 +35,13 @@ const initiateElection = (nodeId, nodes, coordinator, registerWithDirector) => {
 const determineVotingOutcome = (nodeId, nodes, coordinator, registerWithDirector) => {
     if (isCandidate) {
         // set this node as the new coordinator
-        coordinator = nodes.find(node => node.id === nodeId)
+        coordinator = { nodeId, nodeAddress: null };
         // send a message to all nodes to update their coordinator
         nodes.forEach((node) => {
-            if (node.id != nodeId) {
-                node.address.emit('update-coordinator', { nodeId });
+            if (node.nodeId !== nodeId && node.socket) {
+                node.socket.emit('update-coordinator', nodeId);
             }
-        })
+        });
         // send a message to the director to update the coordinator
         registerWithDirector()
     }
@@ -58,7 +56,7 @@ const determineVotingOutcome = (nodeId, nodes, coordinator, registerWithDirector
  * @param {any} nodes - A list of all nodes in the network
  */
 const handleIncomingVote = (nodeId, voterId, nodes) => {
-    const nodeExists = nodes.some(node => node.id === voterId);
+    const nodeExists = nodes.some(node => node.nodeId === voterId);
     if (nodeExists && voterId > nodeId) {
         isCandidate = false;
     }
@@ -75,8 +73,8 @@ const handleIncomingVote = (nodeId, voterId, nodes) => {
  * @param {*} registerWithDirector Function to register with the Node Director
  */
 const handleNewCoordinator = (nodeId, newCoordinatorId, nodes, coordinator, registerWithDirector) => {
-// If the new coordinator has a higher id relinquish coordinator status
-// Else challenge the new coordinator
+    // If the new coordinator has a higher id relinquish coordinator status
+    // Else challenge the new coordinator
     const nodeExists = nodes.some(node => node.id === newCoordinatorId);
     if (nodeExists && newCoordinatorId > nodeId) {
         isCandidate = false;
@@ -85,7 +83,7 @@ const handleNewCoordinator = (nodeId, newCoordinatorId, nodes, coordinator, regi
         coordinator = initiateElection(nodeId, nodes, coordinator, registerWithDirector);
     }
 
-    return coordinator; 
+    return coordinator;
 }
 
 /**
@@ -98,7 +96,10 @@ const handleNewCoordinator = (nodeId, newCoordinatorId, nodes, coordinator, regi
  * @param {*} registerWithDirector Function to register with the Node Director
  */
 const sendElectionResponse = async (nodeId, nodes, candidateId, coordinator, registerWithDirector) => {
-    candidateId.address.emit('submit-vote', nodeId);
+    const candidateNode = nodes.find(node => node.nodeId === candidateId);
+    if (candidateNode && candidateNode.socket) {
+        candidateNode.socket.emit('submit-vote', nodeId);
+    }
     initiateElection(nodeId, nodes, coordinator, registerWithDirector);
 }
 
@@ -122,12 +123,12 @@ const getIsCandidate = () => {
 
 
 
-module.exports  = { 
-    getIsCandidate, 
-    setIsCandidate, 
-    initiateElection, 
-    determineVotingOutcome, 
-    handleIncomingVote, 
-    handleNewCoordinator, 
-    sendElectionResponse 
+module.exports = {
+    getIsCandidate,
+    setIsCandidate,
+    initiateElection,
+    determineVotingOutcome,
+    handleIncomingVote,
+    handleNewCoordinator,
+    sendElectionResponse
 };

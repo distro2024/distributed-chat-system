@@ -16,7 +16,6 @@ const {handleNewMessage} = require('./handleNewMessage');
 const PORT = process.env.PORT || 4000
 const DIRECTOR_URL = process.env.DIRECTOR_URL || "localhost:3000"
 const NODE_HOST = process.env.NODE_HOST || `localhost:${PORT}`
-const PUBLIC_HOST = process.env.PUBLIC_HOST || `localhost:${PORT}`
 
 // Using IS_LEADER environment variable to simulate leader election
 const IS_LEADER = process.env.IS_LEADER === "true"
@@ -35,8 +34,6 @@ const nodeId = uuidv4()
 let isCoordinator = false
 let coordinatorId = isCoordinator ? nodeId : null
 let coordinatorAddress = IS_LEADER ? NODE_HOST : null
-let coordinatorPublicAddress = IS_LEADER ? PUBLIC_HOST : null
-
 
 // list of nodes in the network
 let nodes = []
@@ -89,13 +86,15 @@ app.post('/onboard_node', (req, res) => {
   // prepare current node list for transport
   const neighbours = nodes.map(node => ({
     nodeId: node.nodeId,
-    address: node.nodeAddress.io.uri
+    nodeAddress: node.nodeAddress,
   }));
 
   // save the onboarding node to the list
+  const socket = clientIo(`${newNode.nodeAddress}`);
   nodes.push({
     nodeId: newNode.nodeId,
-    nodeAddress: clientIo(`ws://${newNode.nodeAddress}`)
+    nodeAddress: newNode.nodeAddress,
+    socket: socket,
   });
 
   console.log(`New node onboarded: ${newNode.nodeAddress}`);
@@ -116,19 +115,18 @@ app.post('/heartbeat', (req, res) => {
 const sendHeartbeatToDirector = async () => {
   if (isCoordinator) {
     try {
-      await axios.post(`${DIRECTOR_URL}/register_leader`, {
-        coordinatorId,
-        leaderAddress: coordinatorAddress,
-        leaderPublicAddress: coordinatorPublicAddress,
-      })
-      console.log("Heartbeat sent to Director")
+      await axios.post(`${DIRECTOR_URL}/update_coordinator`, {
+        nodeId: coordinatorId,
+        nodeAddress: coordinatorAddress,
+      });
+      console.log("Heartbeat sent to Director");
     } catch (error) {
-      console.error("Error sending heartbeat to Director:", error.message)
-      isCoordinator = false
-      initiateElection(nodeId, nodes, coordinator, registerWithDirector)
+      console.error("Error sending heartbeat to Director:", error.message);
+      isCoordinator = false;
+      initiateElection(nodeId, nodes, coordinator, registerWithDirector);
     }
   }
-}
+};
 
 const registerWithDirector = async () => {
   // node discovery via Node Director
@@ -137,7 +135,7 @@ const registerWithDirector = async () => {
       nodeId,
       nodeAddress: NODE_HOST,
     }
-    const response = await axios.post(`http://${DIRECTOR_URL}/join_chat`, newNode)
+    const response = await axios.post(`${DIRECTOR_URL}/join_chat`, newNode)
     const coordinator = response.data.coordinator
 
     console.log("Registered with Node Director")
@@ -150,14 +148,15 @@ const registerWithDirector = async () => {
 
     // if I'm not the coordinator, onboard with the coordinator
     if (!isCoordinator) {
-      const response = await axios.post(`http://${coordinatorAddress}/onboard_node`, newNode);
+      const response = await axios.post(`${coordinatorAddress}/onboard_node`, newNode);
       const neighbours = response.data.neighbours;
 
       // save the neighbours
       neighbours.forEach(neighbour => {
         nodes.push({
           nodeId: neighbour.nodeId,
-          nodeAddress: clientIo(`ws://${neighbour.nodeAddress}`)
+          nodeAddress: neighbour.nodeAddress,
+          socket: clientIo(`${neighbour.nodeAddress}`),
         })
       });
     }
@@ -169,14 +168,22 @@ const registerWithDirector = async () => {
 const sendNewMessage = async (message) => {
   // Increment the local vector clock
   vectorClock[nodeId] = (vectorClock[nodeId]) + 1;
-  const newMessage = { id, nodeId, vector_clock: vectorClock, message, timestamp: Date.now() };
+  const newMessage = {
+    id: uuidv4(),
+    nodeId,
+    vector_clock: { ...vectorClock },
+    message,
+    timestamp: Date.now(),
+  };
   // Save the message for further processing
   // handleNewMessage should work for both receiving and sending messages.
-  let discussion = handleNewMessage(vectorClock, newMessage)
-   // Broadcast the message to all other nodes
+  let temp = handleNewMessage(vectorClock, newMessage);
+  vectorClock = temp.vectorClock;
+
+  // Broadcast the message to all other nodes
   for (let node of nodes) {
-    if (node.nodeId != nodeId) {
-    node.address.emit('message', newMessage);
+    if (node.nodeId !== nodeId && node.socket) {
+      node.socket.emit('message', newMessage);
     }
   }
 }
@@ -209,8 +216,8 @@ let missedHeartbeats = 0;
 const sendHeartbeatToCoordinator = async () => {
   if (!isCoordinator) {
     try {
-      // send a GET request to the coordinator's heartbeat endpoint
-      const response = await axios.get(`http://${coordinatorAddress}/heartbeat`)
+      // send a POST request to the coordinator's heartbeat endpoint
+      const response = await axios.post(`http://${coordinatorAddress}/heartbeat`, { nodeId });
       if (response.status === 200) {
         // reset the missedHeartbeats counter
         missedHeartbeats = 0;

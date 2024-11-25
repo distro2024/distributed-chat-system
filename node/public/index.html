@@ -21,6 +21,16 @@
             messagesDiv.appendChild(messageElement);
         });
 
+        socket.on('discussion', (discussion) => {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = '';
+            discussion.forEach((message) => {
+                const messageElement = document.createElement('p');
+                messageElement.textContent = message.message;
+                messagesDiv.appendChild(messageElement);
+            });
+        });
+
         function sendMessage() {
             const messageInput = document.getElementById('messageInput');
             const message = messageInput.value;
