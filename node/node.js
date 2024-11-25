@@ -4,14 +4,14 @@ const http = require("http")
 const { v4: uuidv4 } = require("uuid")
 const path = require("path")
 const clientIo = require("socket.io-client");
-const { 
-  initiateElection, 
-  handleIncomingVote, 
-  handleNewCoordinator, 
+const {
+  initiateElection,
+  handleIncomingVote,
+  handleNewCoordinator,
   sendElectionResponse } = require("./election")
 
 const socketIo = require("socket.io");
-const {handleNewMessage} = require('./handleNewMessage');
+const { handleNewMessage } = require('./handleNewMessage');
 
 const PORT = process.env.PORT || 4000
 const DIRECTOR_URL = process.env.DIRECTOR_URL || "localhost:3000"
@@ -30,34 +30,63 @@ app.use(express.json())
 const nodeId = uuidv4()
 
 // For now, node1 is always the leader based on the IS_LEADER environment variable
-
-let isCoordinator = false
+let isCoordinator = IS_LEADER; // false
 let coordinatorId = isCoordinator ? nodeId : null
-let coordinatorAddress = IS_LEADER ? NODE_HOST : null
+let coordinatorAddress = isCoordinator ? NODE_HOST : null
 
 // list of nodes in the network
 let nodes = []
+
 // vector clock for the consistency of the chat
-let vectorClock = {nodeId: 0} // Initialize the vector clock with the current node's ID
+let vectorClock = { [nodeId]: 0 }; // Initialize the vector clock with the current node's ID
 
+let discussion = [];
+
+// For client-to-node communication
 serverIo.on('connection', (socket) => {
-  console.log('listening sockets'); //remove
+  console.log('Client connected');
 
-  socket.on('message', (msg) => {
-    console.log(`Received message: ${msg}`); //remove
+  socket.emit("discussion", discussion);
+
+  socket.on("client_message", (message) => {
+    console.log('Received client_message:', message);
+    sendNewMessage(message);
+  });
+});
+
+// Socket.io namespace for node-to-node communication
+const nodesNamespace = serverIo.of("/nodes");
+nodesNamespace.on("connection", (socket) => {
+  console.log("Node connected");
+
+  socket.on("node_message", (msg) => {
+    console.log(`Received message from node: ${JSON.stringify(msg)}`);
+
     let temp = handleNewMessage(vectorClock, msg);
-    // Update the local vector clock
-    vectorClock = temp[0];
-    // Save the message for further processing
-    let discussion = temp[1];
+    vectorClock = temp.vectorClock;
+    discussion = temp.discussion;
+
+    // Broadcast the message to all connected clients
+    serverIo.emit("client_message", msg.message);
   });
 
+  socket.on("new_node", (node) => {
+    console.log(`Received new node: ${JSON.stringify(node)}`);
+
+    // Avoid adding itself if the new node is itself
+    if (node.nodeId === nodeId) {
+      console.log(`Received new node for itself. Ignoring.`);
+      return;
+    }
+
+    addOrUpdateNode(node);
+  });
 
   // Incoming requests regarding election process
   // A vote is received from another node
   socket.on('vote', (voterId) => {
     console.log(`Received vote from ${voterId}`); //remove
-    handleIncomingVote(voterId, nodes);
+    handleIncomingVote(nodeId, voterId, nodes);
   });
   // A new coordinator is elected
   coordinator = socket.on('update-coordinator', (newCoordinatorId) => {
@@ -89,17 +118,21 @@ app.post('/onboard_node', (req, res) => {
     nodeAddress: node.nodeAddress,
   }));
 
-  // save the onboarding node to the list
-  const socket = clientIo(`${newNode.nodeAddress}`);
-  nodes.push({
-    nodeId: newNode.nodeId,
-    nodeAddress: newNode.nodeAddress,
-    socket: socket,
-  });
+  addOrUpdateNode(newNode);
 
   console.log(`New node onboarded: ${newNode.nodeAddress}`);
 
-  res.json({ neighbours });
+  for (let node of nodes) {
+    if (node.nodeId !== nodeId && node.socket) {
+      node.socket.emit("new_node", {
+        nodeId: newNode.nodeId,
+        nodeAddress: newNode.nodeAddress,
+      });
+    }
+  }
+
+  console.log(neighbours);
+  res.json({ neighbours, discussion });
 });
 
 app.post('/heartbeat', (req, res) => {
@@ -114,6 +147,7 @@ app.post('/heartbeat', (req, res) => {
 
 const sendHeartbeatToDirector = async () => {
   if (isCoordinator) {
+    console.log("Sending heartbeat to director...");
     try {
       await axios.post(`${DIRECTOR_URL}/update_coordinator`, {
         nodeId: coordinatorId,
@@ -146,18 +180,21 @@ const registerWithDirector = async () => {
     coordinatorId = coordinator.nodeId
     coordinatorAddress = coordinator.nodeAddress
 
+    nodes.push({
+      nodeId,
+      nodeAddress: NODE_HOST,
+      socket: clientIo(`${NODE_HOST}/nodes`),
+    });
+
     // if I'm not the coordinator, onboard with the coordinator
     if (!isCoordinator) {
       const response = await axios.post(`${coordinatorAddress}/onboard_node`, newNode);
       const neighbours = response.data.neighbours;
+      discussion = response.data.discussion;
 
       // save the neighbours
       neighbours.forEach(neighbour => {
-        nodes.push({
-          nodeId: neighbour.nodeId,
-          nodeAddress: neighbour.nodeAddress,
-          socket: clientIo(`${neighbour.nodeAddress}`),
-        })
+        addOrUpdateNode(neighbour);
       });
     }
   } catch (error) {
@@ -166,35 +203,41 @@ const registerWithDirector = async () => {
 }
 
 const sendNewMessage = async (message) => {
+  // If message is an object, extract the message text
+  const messageText = typeof message === 'string' ? message : '';
+
   // Increment the local vector clock
-  vectorClock[nodeId] = (vectorClock[nodeId]) + 1;
+  vectorClock[nodeId] = (vectorClock[nodeId] || 0) + 1;
+
   const newMessage = {
     id: uuidv4(),
     nodeId,
-    vector_clock: { ...vectorClock },
-    message,
+    vectorClock: { ...vectorClock },
+    message: messageText, // Use the extracted message text
     timestamp: Date.now(),
   };
   // Save the message for further processing
-  // handleNewMessage should work for both receiving and sending messages.
-  let temp = handleNewMessage(vectorClock, newMessage);
+  let temp = handleNewMessage(vectorClock, newMessage, discussion);
   vectorClock = temp.vectorClock;
+  discussion = temp.discussion;
 
   // Broadcast the message to all other nodes
   for (let node of nodes) {
+    console.log(node.nodeId);
     if (node.nodeId !== nodeId && node.socket) {
-      node.socket.emit('message', newMessage);
+      node.socket.emit("node_message", newMessage);
     }
   }
-}
+
+  // Emit the message to connected clients
+  serverIo.emit("client_message", messageText);
+};
 
 if (isCoordinator) {
-  sendHeartbeatToDirector()
+  setInterval(sendHeartbeatToDirector, 5000)
 }
 
 registerWithDirector()
-//
-//setInterval(sendHeartbeatToDirector, 5000)
 
 // HEARBEATS 
 // GLOBAL VARIABLES (IN FUTURE CAN BE MOVED TO ENVIRONMENTAL VARIABLES)
@@ -216,8 +259,7 @@ let missedHeartbeats = 0;
 const sendHeartbeatToCoordinator = async () => {
   if (!isCoordinator) {
     try {
-      // send a POST request to the coordinator's heartbeat endpoint
-      const response = await axios.post(`http://${coordinatorAddress}/heartbeat`, { nodeId });
+      const response = await axios.post(`${coordinatorAddress}/heartbeat`, { nodeId });
       if (response.status === 200) {
         // reset the missedHeartbeats counter
         missedHeartbeats = 0;
@@ -235,17 +277,35 @@ const sendHeartbeatToCoordinator = async () => {
   }
 }
 
-setInterval(sendHeartbeatToCoordinator, thisNodesHeartbeatInterval);
+const addOrUpdateNode = (newNode) => {
+  const existingNodeIndex = nodes.findIndex(n => n.nodeAddress === newNode.nodeAddress);
 
-// Add the node itself to the list of nodes
-nodes.push({
-  nodeId,
-  nodeAddress: clientIo(`ws://${NODE_HOST}`)
-});
+  if (existingNodeIndex !== -1) {
+    if (nodes[existingNodeIndex].socket) {
+      nodes[existingNodeIndex].socket.disconnect(true);
+      console.log(`Disconnected existing socket for node ${newNode.nodeAddress}`);
+    }
+
+    nodes[existingNodeIndex] = {
+      nodeId: newNode.nodeId,
+      nodeAddress: newNode.nodeAddress,
+      socket: clientIo(`${newNode.nodeAddress}/nodes`),
+    };
+
+    console.log(`Updated node list with new node: ${newNode.nodeAddress}`);
+  } else {
+    nodes.push({
+      nodeId: newNode.nodeId,
+      nodeAddress: newNode.nodeAddress,
+      socket: clientIo(`${newNode.nodeAddress}/nodes`),
+    });
+
+    console.log(`Added new node: ${newNode.nodeAddress}`);
+  }
+};
+
+setInterval(sendHeartbeatToCoordinator, thisNodesHeartbeatInterval);
 
 server.listen(PORT, () => {
   console.log(`Node service is running on port ${PORT}`)
-  if (!isCoordinator) {
-    // TODO initiateElection();
-  }
 })
