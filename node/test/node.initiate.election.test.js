@@ -12,8 +12,8 @@ describe('When node initiates an election', () => {
 
     beforeEach(() => {
         coordinator = null;
-        neighborNode2 = { id: 2, address: { emit: jest.fn() } };
-        neighborNode4 = { id: 4, address: { emit: jest.fn() } };
+        neighborNode2 = { nodeId: 2, nodeAddress: { emit: jest.fn() } };
+        neighborNode4 = { nodeId: 4, nodeAddress: { emit: jest.fn() } };
         nodes = [
             neighborNode2,
             neighborNode4
@@ -25,8 +25,8 @@ describe('When node initiates an election', () => {
     });
 
     it('timer is set to wait responses for 3 seconds', async () => {
-        thisNode = { id: 5, address: { emit: jest.fn() } };
-        initiateElection(thisNode.id, nodes, coordinator, mockRegisterWithDirector);
+        thisNode = { nodeId: 5, nodeAddress: { emit: jest.fn() } };
+        initiateElection(thisNode.nodeId, nodes, coordinator, mockRegisterWithDirector);
 
         expect(setTimeout).toHaveBeenCalledTimes(1);
         expect(setTimeout).toHaveBeenLastCalledWith(expect.any(Function), 3000);
@@ -34,22 +34,22 @@ describe('When node initiates an election', () => {
     
 
     it('node is set to be a candidate for a new coordinator', async () => {
-        thisNode = { id: 5, address: { emit: jest.fn() } };
+        thisNode = { nodeId: 5, nodeAddress: { emit: jest.fn() } };
         
         expect(getIsCandidate()).toBe(false);
-        initiateElection(thisNode.id, nodes, coordinator, mockRegisterWithDirector);
+        initiateElection(thisNode.nodeId, nodes, coordinator, mockRegisterWithDirector);
 
         expect(getIsCandidate()).toBe(true);
     });
 
     it('node challenges only higher id nodes for the position of coordinator', async () => {
-        thisNode = { id: 3, address: { emit: jest.fn() } };
+        thisNode = { nodeId: 3, nodeAddress: { emit: jest.fn() } };
         
         expect(getIsCandidate()).toBe(false);
-        initiateElection(thisNode.id, nodes, coordinator, mockRegisterWithDirector);
+        initiateElection(thisNode.nodeId, nodes, coordinator, mockRegisterWithDirector);
 
-        expect(neighborNode4.address.emit).toHaveBeenCalledTimes(1);
-        expect(neighborNode2.address.emit).toHaveBeenCalledTimes(0);
+        expect(neighborNode4.nodeAddress.emit).toHaveBeenCalledTimes(1);
+        expect(neighborNode2.nodeAddress.emit).toHaveBeenCalledTimes(0);
     });
 
 
