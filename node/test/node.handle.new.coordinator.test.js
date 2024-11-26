@@ -7,8 +7,8 @@ describe('When a new coordinator has been elected', () => {
     
     beforeEach(() => {
         
-        node1 = { id: 1, address: { emit: jest.fn() } };
-        node2 = { id: 2, address: { emit: jest.fn() } };
+        const node1 = { nodeId: 1, nodeAddress: { emit: jest.fn() } };
+        const node2 = { nodeId: 2, nodeAddress: { emit: jest.fn() } };
         nodes = [node1, node2];
         
         // Mock the registerWithDirector function
@@ -21,7 +21,7 @@ describe('When a new coordinator has been elected', () => {
         const coordinator = handleNewCoordinator(1, 2, nodes, null, mockRegisterWithDirector);
         
         
-        expect(coordinator.id).toBe(2);
+        expect(coordinator.nodeId).toBe(2);
         expect(getIsCandidate()).toBe(false);
       
       });

@@ -63,16 +63,18 @@ serverIo.on('connection', (socket) => {
     handleIncomingVote(voterId, nodes);
   });
   // A new coordinator is elected
-  coordinator = socket.on('update-coordinator', (newCoordinatorId) => {
+  socket.on('update-coordinator', (newCoordinatorId) => {
     console.log(`Received new coordinator: ${newCoordinatorId}`); // remove
-    coordinator = handleNewCoordinator(nodeId, newCoordinatorId, nodes, coordinator, registerWithDirector);
-    coordinatorId = coordinator.id;
-    coordinatorAddress = coordinator.address;
+    let coordinator = handleNewCoordinator(nodeId, newCoordinatorId, nodes, getCoordinator(), registerWithDirector);
+    coordinatorId = coordinator.nodeId;
+    coordinatorAddress = coordinator.nodeAddress.io.uri;
   });
   // An election request is received
   socket.on('election', (coordinatorCandidateId) => {
     console.log(`Received election request`); // remove
-    sendElectionResponse(nodeId, nodes, coordinatorCandidateId, coordinator, registerWithDirector);
+    let coordinator = sendElectionResponse(nodeId, nodes, coordinatorCandidateId, getCoordinator(), registerWithDirector);
+    coordinatorId = coordinator.nodeId;
+    coordinatorAddress = coordinator.nodeAddress.io.uri;
   });
 });
 
@@ -125,7 +127,10 @@ const sendHeartbeatToDirector = async () => {
     } catch (error) {
       console.error("Error sending heartbeat to Director:", error.message)
       isCoordinator = false
-      initiateElection(nodeId, nodes, coordinator, registerWithDirector)
+      // Fetch the coordinator from the nodes list
+      let coordinator = initiateElection(nodeId, nodes, getCoordinator(), registerWithDirector)
+      coordinatorId = coordinator.nodeId
+      coordinatorAddress = coordinator.nodeAddress.io.uri
     }
   }
 }
@@ -208,6 +213,7 @@ let missedHeartbeats = 0;
 // if response is 200 OK, reset the missedHeartbeats counter
 const sendHeartbeatToCoordinator = async () => {
   if (!isCoordinator) {
+    console.log(`Sending heartbeat to coordinator: ${coordinatorAddress}`);
     try {
       // send a GET request to the coordinator's heartbeat endpoint
       const response = await axios.get(`http://${coordinatorAddress}/heartbeat`)
@@ -223,9 +229,15 @@ const sendHeartbeatToCoordinator = async () => {
       missedHeartbeats++;
     }
     if (missedHeartbeats >= maxMissedHeartbeats) {
-      initiateElection(nodeId, nodes, coordinator, registerWithDirector);
+      let coordinator = initiateElection(nodeId, nodes, getCoordinator(), registerWithDirector);
+      coordinatorId = coordinator.nodeId;
+      coordinatorAddress = coordinator.nodeAddress.io.uri;
     }
   }
+}
+
+const getCoordinator = () => {
+  return nodes.find(node => node.nodeId === coordinatorId);
 }
 
 setInterval(sendHeartbeatToCoordinator, thisNodesHeartbeatInterval);

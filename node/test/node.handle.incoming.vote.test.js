@@ -5,8 +5,8 @@ describe('When a vote arrives from another node,', () => {
     
     beforeEach(() => {
         nodes = [
-            { id: 2, address: { emit: jest.fn() } },
-            { id: 3, address: { emit: jest.fn() } },
+            { nodeId: 2, nodeAddress: { emit: jest.fn() } },
+            { nodeId: 3, nodeAddress: { emit: jest.fn() } },
         ];
         
     });
