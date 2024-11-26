@@ -179,7 +179,26 @@ The coordinator then responds with the discussion history (a list of message obj
 
 ### Consistency in discussion 
 
-To ensure message consistency in our distributed chat system, our team implements vector clocks for reliable sequencing across nodes without the need for centralized synchronization. Each node is equipped with a vector clock that meticulously tracks the events it processes. Whenever a node sends a message, it first increments its clock, embedding this updated information within the message itself. Upon receipt, a node merges its vector clock with that of the sender, harmonizing both histories. This methodological merging not only maintains historical accuracy but also aids in identifying causal relationships and resolving potential conflicts, thereby supporting our system's scalable and efficient message ordering.
+## Key Features
+
+### 1. Vector Clocks for Causal Relationships
+- Each node tracks events using a vector clock, with counters representing the state of each node.
+- The local counter is **incremented only when the node sends a message**, accurately reflecting local events.
+- Upon receiving a message, the local vector clock is updated by merging with the incoming clock, taking the maximum value for each node.
+
+### 2. Priority Queue for Message Ordering
+- Messages are added to a priority queue, sorted by vector clocks.
+- **Concurrent messages** (with equal clocks) are resolved deterministically using timestamps as tiebreakers.
+
+### 3. Consistency Across Nodes
+- All nodes apply the same logic to ensure consistent message ordering across the system, regardless of the delivery sequence.
+- Duplicate messages are ignored, and counters are not incremented during reception.
+
+## Handling Message Loss
+**TODO:** Add details about message loss handling strategies to guarantee that all nodes share a common state.
+
+## Summary
+This implementation guarantees **causal consistency** across the system when all messages are successfully delivered. By combining vector clocks and priority queues, the system ensures reliable and ordered communication in a distributed environment.
 
 {{< pagebreak >}}
 
