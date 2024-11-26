@@ -128,8 +128,7 @@ const sendHeartbeatToDirector = async () => {
       console.error("Error sending heartbeat to Director:", error.message)
       isCoordinator = false
       // Fetch the coordinator from the nodes list
-      let coordinator = nodes.find(node => node.nodeId === coordinatorId);
-      coordinator = initiateElection(nodeId, nodes, coordinator, registerWithDirector)
+      let coordinator = initiateElection(nodeId, nodes, getCoordinator(), registerWithDirector)
       coordinatorId = coordinator.nodeId
       coordinatorAddress = coordinator.nodeAddress.io.uri
     }
