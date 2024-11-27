@@ -7,9 +7,9 @@ const compareMessages = (a, b) => {
   const allKeys = new Set([...Object.keys(vcA), ...Object.keys(vcB)]);
   for (const key of allKeys) {
     // The loop will break immediately when a difference is found
-    if (vcA[key]< vcB[key]) {
+    if (vcA[key] < vcB[key]) {
       return -1;
-    } else if (vcA[key]> vcB[key]) {
+    } else if (vcA[key] > vcB[key]) {
       return 1;
     }
   }
@@ -21,25 +21,43 @@ const compareMessages = (a, b) => {
 const discussionQueue = new PriorityQueue(compareMessages);
 
 const handleNewMessage = (vectorClock, msg) => {
-  const { id, node_id, vector_clock, message, timestamp } = msg;
-  // Ensure all keys in the received vector clock are present in the local vector clock
-  for (const key in vector_clock) {
-    if (!(key in vectorClock)) {
-      vectorClock[key] = 0; // Initialize missing keys to 0
-      }
-    }
-    // Merge the received vector clock into the local vector clock.
-    // When sending a message, the sender merges its own vector clock into the local vector clock.
-    for (const key in vector_clock) {
-      vectorClock[key] = Math.max(vectorClock[key], vector_clock[key]);
-    }
-    // Add the message to the discussion
-    discussionQueue.enqueue( { id, node_id, vectorClock: { ...vectorClock }, message, timestamp, });
-    // Return the updated vector clock and discussion
+  const { id, nodeId: msgNodeId, vectorClock: msgVectorClock, message, timestamp } = msg;
+
+  const existingMessage = discussionQueue.toArray().find(m => m.id === id);
+  if (existingMessage) {
     return {
-      vectorClock, 
+      vectorClock,
       discussion: discussionQueue.toArray(),
     };
   }
 
-  module.exports = { handleNewMessage };
+  // Ensure all keys in the received vector clock are present in the local vector clock
+  for (const key in msgVectorClock) {
+    if (!(key in vectorClock)) {
+      vectorClock[key] = 0; // Initialize missing keys to 0
+    }
+  }
+  // Merge the received vector clock into the local vector clock.
+  for (const key in msgVectorClock) {
+    vectorClock[key] = Math.max(vectorClock[key], msgVectorClock[key]);
+  }
+
+  // Extract the actual message text if necessary
+  const messageText = typeof message === 'string' ? message : '';
+
+  // Add the message to the discussion
+  discussionQueue.enqueue({
+    id,
+    nodeId: msgNodeId,
+    vectorClock: { ...msgVectorClock },
+    message: messageText, // Use the extracted message text
+    timestamp,
+  });
+  // Return the updated vector clock and discussion
+  return {
+    vectorClock,
+    discussion: discussionQueue.toArray(),
+  };
+};
+
+module.exports = { handleNewMessage };

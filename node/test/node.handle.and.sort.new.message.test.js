@@ -1,152 +1,105 @@
 const { handleNewMessage } = require('../handleNewMessage');
-
+  
 describe('When function handleNewMessage is invoked', () => {
-  let vectorClock;
-  let discussion;
-
-  beforeEach(() => {
-    vectorClock = { A: 0, B: 0, C: 0, Batman: 0, Superman: 0 }; // Initial state of the vector clock
-  });
-
-  test('it orders messages correctly by vector clock precedence', async () => {
-    const messages = [
-      {
-        id: 1,
-        node_id: 'A',
-        vector_clock: { A: 1 },
+    let vectorClock = {};
+    it('messages should be correctly ordered based on vector clocks and timestamps', () => {
+      
+      let result = handleNewMessage(vectorClock, {
+        id: '1',
+        nodeId: 'A',
+        vectorClock: { A: 1 },
         message: 'Hello from A',
         timestamp: 1000,
-      },
-      {
-        id: 2,
-        node_id: 'B',
-        vector_clock: { B: 1 },
-        message: 'Hello from B',
-        timestamp: 1100,
-      },
-      {
-        id: 3,
-        node_id: 'A',
-        vector_clock: { A: 2, B: 1 },
-        message: 'Follow up from A',
-        timestamp: 1200,
-      },
-      {
-        id: 4,
-        node_id: 'C',
-        vector_clock: { C: 1 },
-        message: 'Hello from C',
-        timestamp: 1300,
-      }
-    ];
-
-    for (const msg of messages) {
-      const result = await handleNewMessage(vectorClock, msg);
+      });
       vectorClock = result.vectorClock;
-      discussion = result.discussion;
-    }
-
-    // Check the final state of the vector clock
-    expect(vectorClock).toEqual({ A: 2, B: 1, C: 1, Batman: 0, Superman: 0 });
-
-    // Check the sorted discussion
-    expect(discussion).toEqual([
-      {
-        id: 1,
-        node_id: 'A',
-        vectorClock: { A: 1, B: 0, C:0, Batman: 0, Superman: 0 }, // Vector clock after the first message
-        message: 'Hello from A',
-        timestamp: 1000,
-      },
-      {
-        id: 2,
-        node_id: 'B',
-        vectorClock: { A: 1, B: 1, C:0, Batman: 0, Superman: 0 }, // Vector clock after the second message
+  
+      result = handleNewMessage(vectorClock, {
+        id: '2',
+        nodeId: 'B',
+        vectorClock: { B: 1 },
         message: 'Hello from B',
-        timestamp: 1100,
-      },
-      {
-        id: 3,
-        node_id: 'A',
-        vectorClock: { A: 2, B: 1, C: 0, Batman: 0, Superman: 0 }, // Vector clock after the third message
-        message: 'Follow up from A',
-        timestamp: 1200,
-      },
-      {
-        id: 4,
-        node_id: 'C',
-        vectorClock: { A: 2, B: 1, C: 1, Batman: 0, Superman: 0 }, // Vector clock after the fourth message
-        message: 'Hello from C',
-        timestamp: 1300,
-      }
-    ]);
-  });
-  test('it orders concurrent messages correctly by timestamps when vector clocks are equal', async () => {
-    const messages = [
-      {
-        id: 5,
-        node_id: 'Batman',
-        vector_clock: { A: 2, B: 1, C: 1, Batman: 1, Superman: 1 },
-        message: 'Either you die a hero or you live long enough to see yourself become the villain',
-        timestamp: 1400,
-      },
-      {
-        id: 6,
-        node_id: 'Superman',
-        vector_clock: { A: 2, B: 1, C: 1, Batman: 1, Superman: 1 },
-        message: 'With great power comes great responsibility',
-        timestamp: 1500,
-      },
-    ];
-    for (const msg of messages) {
-      const result = await handleNewMessage(vectorClock, msg);
+        timestamp: 1005,
+      });
       vectorClock = result.vectorClock;
-      discussion = result.discussion;
-    }
-    expect(vectorClock).toEqual({ A: 2, B: 1, C: 1, Batman: 1, Superman: 1 });
-    expect(discussion).toEqual([
-      {
-        id: 1,
-        node_id: 'A',
-        vectorClock: { A: 1, B: 0, C: 0, Batman: 0, Superman: 0 }, // Vector clock after the first message
+  
+      result = handleNewMessage(vectorClock, {
+        id: '3',
+        nodeId: 'A',
+        vectorClock: { A: 2 },
+        message: 'Another message from A',
+        timestamp: 1010,
+      });
+      vectorClock = result.vectorClock;
+  
+      result = handleNewMessage(vectorClock, {
+        id: '4',
+        nodeId: 'B',
+        vectorClock: { B: 2 },
+        message: 'Another message from B',
+        timestamp: 1008,
+      });
+      vectorClock = result.vectorClock;
+
+      expect(result.discussion.map(m => m.id)).toEqual(['1', '2', '4', '3']); 
+    });
+  
+    it('concurrent messages with the same vector clock should be handled correctly', () => {
+  
+      result = handleNewMessage(vectorClock, {
+        id: '5',
+        nodeId: 'B',
+        vectorClock: { B: 3},
+        message: 'Another message from B',
+        timestamp: 2005, 
+      });
+      vectorClock = result.vectorClock;
+  
+      result = handleNewMessage(vectorClock, {
+        id: '6',
+        nodeId: 'A',
+        vectorClock: { A: 3 },
+        message: 'Another message from A',
+        timestamp: 2002,
+      });
+      vectorClock = result.vectorClock;
+  
+      expect(result.discussion.map(m => m.id)).toEqual(['1', '2', '4', '3', '6', '5']);
+    });
+  
+    it('duplicate messages should be ignored', () => {
+  
+      let result = handleNewMessage(vectorClock, {
+        id: '7',
+        nodeId: 'A',
+        vectorClock: { A: 4 },
         message: 'Hello from A',
-        timestamp: 1000,
-      },
-      {
-        id: 2,
-        node_id: 'B',
-        vectorClock: { A: 1, B: 1, C: 0, Batman: 0, Superman: 0 }, // Vector clock after the second message
+        timestamp: 3000,
+      });
+      vectorClock = result.vectorClock;
+
+      result = handleNewMessage(vectorClock, {
+        id: '7', 
+        nodeId: 'A',
+        vectorClock: { A: 4 },
+        message: 'Hello from A',
+        timestamp: 3000,
+      });
+      vectorClock = result.vectorClock;
+
+      expect(result.discussion.length).toBe(7);
+    });
+  
+    it('missing keys should be initialized in the received vector clock', () => {
+      let vectorClock = { A: 5 };
+  
+      const result = handleNewMessage(vectorClock, {
+        id: '8',
+        nodeId: 'B',
+        vectorClock: { B: 4, C: 1 }, 
         message: 'Hello from B',
-        timestamp: 1100,
-      },
-      {
-        id: 3,
-        node_id: 'A',
-        vectorClock: { A: 2, B: 1, C: 0, Batman: 0, Superman: 0 }, // Vector clock after the third message
-        message: 'Follow up from A',
-        timestamp: 1200,
-      },
-      {
-        id: 4,
-        node_id: 'C',
-        vectorClock: { A: 2, B: 1, C: 1, Batman: 0, Superman: 0 }, // Vector clock after the fourth message
-        message: 'Hello from C',
-        timestamp: 1300,
-      },
-      {
-        id: 5,
-        node_id: 'Batman',
-        vectorClock: { A: 2, B: 1, C: 1, Batman: 1, Superman: 1 }, // Vector clock after the fifth message
-        message: 'Either you die a hero or you live long enough to see yourself become the villain',
-        timestamp: 1400,
-      },
-      {
-        id: 6,
-        node_id: 'Superman',
-        vectorClock: { A: 2, B: 1, C: 1, Batman: 1, Superman: 1 }, // Vector clock after the sixth message
-        message: 'With great power comes great responsibility',
-        timestamp: 1500,
-      },
-    ]);
+        timestamp: 7000,
+      });
+  
+      expect(result.vectorClock).toEqual({ A: 5, B: 4, C: 1 });
+    });
   });
-});
