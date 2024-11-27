@@ -17,7 +17,7 @@ Running this application required version `x.x.x` of node.js and version `x.x.x`
 
 Start by cloning the application from the default branch (main) of the GitHub -repository with `git clone`.
 
-The application has two modules: `director` and `node`. For each of these you need to install required dependencies. 
+The application has two modules: `director` and `node`. For each of these you need to install required dependencies. Alternatively, you can use Docker if you want to [test this locally](#running-with-docker).
 
 #### Node
 Move to the subdirectory `./node` and run the command 
@@ -47,7 +47,11 @@ npm test
 
 ### Local testing
 
-To test the application locally, start new terminals for director and as many nodes as you want. Start the director with
+To test the application locally, you can start the application either manually or using Docker.
+
+#### Running manually
+
+Open a new terminal and start the director with:
 ```
 node director.js
 ```
@@ -62,6 +66,23 @@ PORT=654x node node.js
 
 In terminal windows you can follow the messages between nodes and the director. You can test the chat-features by navigating to localhost:PORT (for each node). 
 
+#### Running with Docker
+
+Alternatively, you can run the application using Docker. This method simplifies the setup by containerizing the director and nodes.
+
+Open separate terminal windows to start each service:
+```
+docker-compose up director
+docker-compose up node1
+docker-compose up node2
+docker-compose up node3
+```
+Once all services are up and running, you can access the clients via your web browser at the following URLs:
+```
+http://localhost:4000
+http://localhost:4001
+http://localhost:4002
+```
 ## Instructions for developers
 
 ### Linter
