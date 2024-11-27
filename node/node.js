@@ -13,9 +13,10 @@ const {
 const socketIo = require("socket.io");
 const { handleNewMessage } = require('./handleNewMessage');
 
+// Define environment variables with default values
 const PORT = process.env.PORT || 4000
-const DIRECTOR_URL = process.env.DIRECTOR_URL || "localhost:3000"
-const NODE_HOST = process.env.NODE_HOST || `localhost:${PORT}`
+const DIRECTOR_URL = process.env.DIRECTOR_URL || "http://localhost:3000"
+const NODE_HOST = process.env.NODE_HOST || `http://localhost:${PORT}`
 
 // Using IS_LEADER environment variable to simulate leader election
 const IS_LEADER = process.env.IS_LEADER === "true"
@@ -40,14 +41,17 @@ let nodes = []
 // vector clock for the consistency of the chat
 let vectorClock = { [nodeId]: 0 }; // Initialize the vector clock with the current node's ID
 
+// Array to store the discussion
 let discussion = [];
 
 // For client-to-node communication
 serverIo.on('connection', (socket) => {
   console.log('Client connected');
 
+  // Send the current discussion history to the newly connected client
   socket.emit("discussion", discussion);
 
+  // Listen for incoming messages from clients
   socket.on("client_message", (message) => {
     console.log('Received client_message:', message);
     sendNewMessage(message);
@@ -59,9 +63,11 @@ const nodesNamespace = serverIo.of("/nodes");
 nodesNamespace.on("connection", (socket) => {
   console.log("Node connected");
 
+  // Listen for incoming messages from other nodes
   socket.on("node_message", (msg) => {
     console.log(`Received message from node: ${JSON.stringify(msg)}`);
 
+    // Handle the incoming message
     let temp = handleNewMessage(vectorClock, msg);
     vectorClock = temp.vectorClock;
     discussion = temp.discussion;
@@ -70,6 +76,7 @@ nodesNamespace.on("connection", (socket) => {
     serverIo.emit("client_message", msg.message);
   });
 
+  // Listen for new node registrations
   socket.on("new_node", (node) => {
     console.log(`Received new node: ${JSON.stringify(node)}`);
 
@@ -79,6 +86,7 @@ nodesNamespace.on("connection", (socket) => {
       return;
     }
 
+    // Add or update the node in the nodes list
     addOrUpdateNode(node);
   });
 
@@ -114,7 +122,7 @@ app.post('/onboard_node', (req, res) => {
 
   console.log(`Onboarding new node: ${newNode.nodeAddress}`);
 
-  // prepare current node list for transport
+  // Prepare a list of current nodes to send to the new node
   const neighbours = nodes.map(node => ({
     nodeId: node.nodeId,
     nodeAddress: node.nodeAddress,
@@ -124,6 +132,7 @@ app.post('/onboard_node', (req, res) => {
 
   console.log(`New node onboarded: ${newNode.nodeAddress}`);
 
+  // Emit the new_node event to all connected nodes
   for (let node of nodes) {
     if (node.nodeId !== nodeId && node.socket) {
       node.socket.emit("new_node", {
@@ -137,16 +146,7 @@ app.post('/onboard_node', (req, res) => {
   res.json({ neighbours, discussion });
 });
 
-app.post('/heartbeat', (req, res) => {
-  console.log(`Received heartbeat from node: ${req.body.nodeId}`);
-
-  res.sendStatus(200);
-});
-
-//
-// END OF COORDINATOR TASKS
-//
-
+// Send heartbeat signals to the director
 const sendHeartbeatToDirector = async () => {
   if (isCoordinator) {
     console.log("Sending heartbeat to director...");
@@ -164,6 +164,18 @@ const sendHeartbeatToDirector = async () => {
     }
   }
 };
+
+//
+// END OF COORDINATOR TASKS
+//
+
+// Endpoint to receive heartbeats from other nodes
+app.post('/heartbeat', (req, res) => {
+  console.log(`Received heartbeat from node: ${req.body.nodeId}`);
+
+  res.sendStatus(200);
+});
+
 
 const registerWithDirector = async () => {
   // node discovery via Node Director
@@ -283,15 +295,22 @@ const sendHeartbeatToCoordinator = async () => {
   }
 }
 
+// Function to add a new node or update an existing node based on its address. 
+// For example, if a node with the same address already exists, the existing 
+// node is updated with the new node's information. If the node does not exist,
+//  a new node is added to the list.
 const addOrUpdateNode = (newNode) => {
+  // Find the index of the node with the same address
   const existingNodeIndex = nodes.findIndex(n => n.nodeAddress === newNode.nodeAddress);
 
   if (existingNodeIndex !== -1) {
+    // If the node already exists, disconnect the existing socket
     if (nodes[existingNodeIndex].socket) {
       nodes[existingNodeIndex].socket.disconnect(true);
       console.log(`Disconnected existing socket for node ${newNode.nodeAddress}`);
     }
 
+    // Create a new socket connection
     nodes[existingNodeIndex] = {
       nodeId: newNode.nodeId,
       nodeAddress: newNode.nodeAddress,
@@ -300,6 +319,7 @@ const addOrUpdateNode = (newNode) => {
 
     console.log(`Updated node list with new node: ${newNode.nodeAddress}`);
   } else {
+    // Create a new socket connection for the new node
     nodes.push({
       nodeId: newNode.nodeId,
       nodeAddress: newNode.nodeAddress,
