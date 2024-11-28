@@ -177,28 +177,20 @@ The coordinator then responds with the discussion history (a list of message obj
 }
 ```
 
-### Consistency in discussion 
+### Eventual Consistency in discussion 
 
-#### Key Features
+* **Direct Communication:** Nodes communicate directly with each other, reducing reliance on a single point of failure.
 
-##### 1. Vector Clocks for Causal Relationships
-- Each node tracks events using a vector clock, with counters representing the state of each node.
-- The local counter is **incremented only when the node sends a message**, accurately reflecting local events.
-- Upon receiving a message, the local vector clock is updated by merging with the incoming clock, taking the maximum value for each node.
+* **Vector Clocks, Timestamps, and Priority Queue:** 
+    - Each node tracks events using a vector clock, with counters representing the state of each node.
+    - The local counter is **incremented only when the node sends a message**, accurately reflecting local events.
+    - Upon receiving a message, the local vector clock is updated by merging with the incoming clock, taking the maximum value for each node. 
+    - **Timestamps are used to break ties when vector clocks are identical.** 
+    - **A priority queue (implemented through the `discussion` array) stores messages, ordered by their vector clocks and timestamps.**  This queue uses the `compareMessages` function to determine the order of messages during insertion.
+        - **Inserting a new message into this queue has a time complexity of O(n) in the worst case**, where n is the number of messages in the queue. This is because the `handleNewMessage` function (which utilizes the `compareMessages` function) potentially needs to iterate through the entire array to find the correct position for the new message.
+        - **Retrieving messages from the queue (when sending the history to clients or new nodes) has a time complexity of O(1)** since the messages are already stored in order.
 
-##### 2. Priority Queue for Message Ordering
-- Messages are added to a priority queue, sorted by vector clocks.
-- **Concurrent messages** (with equal clocks) are resolved deterministically using timestamps as tiebreakers.
-
-##### 3. Consistency Across Nodes
-- All nodes apply the same logic to ensure consistent message ordering across the system, regardless of the delivery sequence.
-- Duplicate messages are ignored, and counters are not incremented during reception.
-
-##### Handling Message Loss
-**TODO:** Add details about message loss handling strategies to guarantee that all nodes share a common state.
-
-##### Summary
-This implementation guarantees **causal consistency** across the system when all messages are successfully delivered. By combining vector clocks and priority queues, the system ensures reliable and ordered communication in a distributed environment.
+* **Catch-up Mechanism:** New nodes receive the full chat history (`discussion` array), allowing them to become consistent with the rest of the network.
 
 {{< pagebreak >}}
 
