@@ -1,46 +1,43 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Chat</title>
+        <script src="/socket.io/socket.io.js"></script>
+    </head>
 
-<head>
-    <meta charset="UTF-8">
-    <title>Chat</title>
-    <script src="/socket.io/socket.io.js"></script>
-</head>
+    <body>
+        <h2>Chat</h2>
+        <div id="messages"></div>
+        <input id="messageInput" type="text" placeholder="Type a message..." />
+        <button onclick="sendMessage()">Send</button>
 
-<body>
-    <h2>Chat</h2>
-    <div id="messages"></div>
-    <input id="messageInput" type="text" placeholder="Type a message...">
-    <button onclick="sendMessage()">Send</button>
+        <script>
+            const socket = io();
 
-    <script>
-        const socket = io();
-
-        socket.on('client_message', (message) => {
-            const messagesDiv = document.getElementById('messages');
-            const messageElement = document.createElement('p');
-            messageElement.textContent = message;
-            messagesDiv.appendChild(messageElement);
-        });
-
-        socket.on('discussion', (discussion) => {
-            const messagesDiv = document.getElementById('messages');
-            messagesDiv.innerHTML = '';
-            discussion.forEach(message => {
+            socket.on('client_message', (message) => {
+                const messagesDiv = document.getElementById('messages');
                 const messageElement = document.createElement('p');
-                messageElement.textContent = message.message;
+                messageElement.textContent = message;
                 messagesDiv.appendChild(messageElement);
             });
-        });
 
-        function sendMessage() {
-            const messageInput = document.getElementById('messageInput');
-            const messageText = messageInput.value;
-            socket.emit('client_message', messageText);
-            messageInput.value = '';
-        }
-    </script>
+            socket.on('discussion', (discussion) => {
+                const messagesDiv = document.getElementById('messages');
+                messagesDiv.innerHTML = '';
+                discussion.forEach((message) => {
+                    const messageElement = document.createElement('p');
+                    messageElement.textContent = message.message;
+                    messagesDiv.appendChild(messageElement);
+                });
+            });
 
-</body>
-
+            function sendMessage() {
+                const messageInput = document.getElementById('messageInput');
+                const messageText = messageInput.value;
+                socket.emit('client_message', messageText);
+                messageInput.value = '';
+            }
+        </script>
+    </body>
 </html>
