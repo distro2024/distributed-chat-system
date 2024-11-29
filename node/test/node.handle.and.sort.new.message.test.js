@@ -39,12 +39,7 @@ describe('When function handleNewMessage is invoked', () => {
         });
         vectorClock = result.vectorClock;
 
-        expect(result.discussion.map((m) => m.id)).toEqual([
-            '1',
-            '2',
-            '4',
-            '3'
-        ]);
+        expect(result.discussion.map((m) => m.id)).toEqual(['1', '2', '4', '3']);
     });
 
     it('concurrent messages with the same vector clock should be handled correctly', () => {
@@ -66,14 +61,7 @@ describe('When function handleNewMessage is invoked', () => {
         });
         vectorClock = result.vectorClock;
 
-        expect(result.discussion.map((m) => m.id)).toEqual([
-            '1',
-            '2',
-            '4',
-            '3',
-            '6',
-            '5'
-        ]);
+        expect(result.discussion.map((m) => m.id)).toEqual(['1', '2', '4', '3', '6', '5']);
     });
 
     it('duplicate messages should be ignored', () => {

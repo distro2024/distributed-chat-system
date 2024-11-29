@@ -4,12 +4,7 @@ const http = require('http');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const clientIo = require('socket.io-client');
-const {
-    initiateElection,
-    handleIncomingVote,
-    handleNewCoordinator,
-    sendElectionResponse
-} = require('./election');
+const { initiateElection, handleIncomingVote, handleNewCoordinator, sendElectionResponse } = require('./election');
 
 const socketIo = require('socket.io');
 const { handleNewMessage } = require('./handleNewMessage');
@@ -100,13 +95,7 @@ nodesNamespace.on('connection', (socket) => {
     // A new coordinator is elected
     socket.on('update-coordinator', (newCoordinatorId) => {
         console.log(`Received new coordinator: ${newCoordinatorId}`); // remove
-        let coordinator = handleNewCoordinator(
-            nodeId,
-            newCoordinatorId,
-            nodes,
-            getCoordinator(),
-            registerWithDirector
-        );
+        let coordinator = handleNewCoordinator(nodeId, newCoordinatorId, nodes, getCoordinator(), registerWithDirector);
         coordinatorId = coordinator.nodeId;
         coordinatorAddress = coordinator.nodeAddress.io.uri;
     });
@@ -163,12 +152,7 @@ app.post('/onboard_node', (req, res) => {
 const sendHeartbeatToDirector = async () => {
     if (isCoordinator) {
         console.log('Sending heartbeat to director...');
-        console.log(
-            'coordinatorId',
-            coordinatorId,
-            'coordinatorAddress',
-            coordinatorAddress
-        );
+        console.log('coordinatorId', coordinatorId, 'coordinatorAddress', coordinatorAddress);
         try {
             await axios.post(`${DIRECTOR_URL}/update_coordinator`, {
                 nodeId: coordinatorId,
@@ -176,17 +160,9 @@ const sendHeartbeatToDirector = async () => {
             });
             console.log('Heartbeat sent to Director');
         } catch (error) {
-            console.error(
-                'Error sending heartbeat to Director:',
-                error.message
-            );
+            console.error('Error sending heartbeat to Director:', error.message);
             isCoordinator = false;
-            initiateElection(
-                nodeId,
-                nodes,
-                getCoordinator(),
-                registerWithDirector
-            );
+            initiateElection(nodeId, nodes, getCoordinator(), registerWithDirector);
         }
     }
 };
@@ -228,10 +204,7 @@ const registerWithDirector = async () => {
 
         // if I'm not the coordinator, onboard with the coordinator
         if (!isCoordinator) {
-            const response = await axios.post(
-                `${coordinatorAddress}/onboard_node`,
-                newNode
-            );
+            const response = await axios.post(`${coordinatorAddress}/onboard_node`, newNode);
             const neighbours = response.data.neighbours;
             discussion = response.data.discussion;
 
@@ -293,8 +266,7 @@ const heartbeatInterval = 5000;
 // If responses to two consecutive heartbeats are not received,
 // the coordinator is considered dead and an election is initiated
 // Randomize the heartbeat interval for each node within the range of T-2T milliseconds
-const thisNodesHeartbeatInterval =
-    Math.floor(Math.random() * heartbeatInterval) + heartbeatInterval;
+const thisNodesHeartbeatInterval = Math.floor(Math.random() * heartbeatInterval) + heartbeatInterval;
 
 // Global counter for missed heartbeats
 let missedHeartbeats = 0;
@@ -304,12 +276,9 @@ const sendHeartbeatToCoordinator = async () => {
     if (!isCoordinator) {
         console.log(`Sending heartbeat to coordinator: ${coordinatorAddress}`);
         try {
-            const response = await axios.post(
-                `${coordinatorAddress}/heartbeat`,
-                {
-                    nodeId
-                }
-            );
+            const response = await axios.post(`${coordinatorAddress}/heartbeat`, {
+                nodeId
+            });
             if (response.status === 200) {
                 // reset the missedHeartbeats counter
                 missedHeartbeats = 0;
@@ -323,12 +292,7 @@ const sendHeartbeatToCoordinator = async () => {
             missedHeartbeats++;
         }
         if (missedHeartbeats >= maxMissedHeartbeats) {
-            let coordinator = initiateElection(
-                nodeId,
-                nodes,
-                getCoordinator(),
-                registerWithDirector
-            );
+            let coordinator = initiateElection(nodeId, nodes, getCoordinator(), registerWithDirector);
             coordinatorId = coordinator.nodeId;
             coordinatorAddress = coordinator.nodeAddress.io.uri;
         }
@@ -341,17 +305,13 @@ const sendHeartbeatToCoordinator = async () => {
 //  a new node is added to the list.
 const addOrUpdateNode = (newNode) => {
     // Find the index of the node with the same address
-    const existingNodeIndex = nodes.findIndex(
-        (n) => n.nodeAddress === newNode.nodeAddress
-    );
+    const existingNodeIndex = nodes.findIndex((n) => n.nodeAddress === newNode.nodeAddress);
 
     if (existingNodeIndex !== -1) {
         // If the node already exists, disconnect the existing socket
         if (nodes[existingNodeIndex].socket) {
             nodes[existingNodeIndex].socket.disconnect(true);
-            console.log(
-                `Disconnected existing socket for node ${newNode.nodeAddress}`
-            );
+            console.log(`Disconnected existing socket for node ${newNode.nodeAddress}`);
         }
 
         // Create a new socket connection

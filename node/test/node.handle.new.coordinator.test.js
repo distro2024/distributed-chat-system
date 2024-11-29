@@ -1,8 +1,4 @@
-const {
-    getIsCandidate,
-    setIsCandidate,
-    handleNewCoordinator
-} = require('../election');
+const { getIsCandidate, setIsCandidate, handleNewCoordinator } = require('../election');
 
 describe('When a new coordinator has been elected', () => {
     let nodes;
@@ -20,13 +16,7 @@ describe('When a new coordinator has been elected', () => {
     it('if a higher id node declares itself to be a coordinator, accept', async () => {
         setIsCandidate(true);
 
-        const coordinator = handleNewCoordinator(
-            1,
-            2,
-            nodes,
-            null,
-            mockRegisterWithDirector
-        );
+        const coordinator = handleNewCoordinator(1, 2, nodes, null, mockRegisterWithDirector);
 
         expect(coordinator.nodeId).toBe(2);
         expect(getIsCandidate()).toBe(false);

@@ -1,8 +1,4 @@
-const {
-    getIsCandidate,
-    setIsCandidate,
-    handleIncomingVote
-} = require('../election');
+const { getIsCandidate, setIsCandidate, handleIncomingVote } = require('../election');
 
 describe('When a vote arrives from another node,', () => {
     let nodes;

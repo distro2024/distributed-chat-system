@@ -23,12 +23,7 @@ describe('When voting outcome is determined', () => {
         nodes.push(thisNode);
         coordinator = null;
 
-        coordinator = determineVotingOutcome(
-            thisNode.nodeId,
-            nodes,
-            coordinator,
-            mockRegisterWithDirector
-        );
+        coordinator = determineVotingOutcome(thisNode.nodeId, nodes, coordinator, mockRegisterWithDirector);
         expect(coordinator.nodeId).toBe(thisNode.nodeId);
     });
 
@@ -39,12 +34,7 @@ describe('When voting outcome is determined', () => {
         coordinator = null;
 
         // Call the function
-        coordinator = determineVotingOutcome(
-            thisNode.nodeId,
-            nodes,
-            coordinator,
-            mockRegisterWithDirector
-        );
+        coordinator = determineVotingOutcome(thisNode.nodeId, nodes, coordinator, mockRegisterWithDirector);
 
         expect(coordinator).toBe(null);
     });
