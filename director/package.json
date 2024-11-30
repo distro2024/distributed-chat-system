@@ -4,10 +4,14 @@
     "description": "",
     "main": "director.js",
     "scripts": {
-        "start": "node director.js"
+        "start": "node index.js",
+        "test": "node --test --test-concurrency=1"
     },
     "dependencies": {
-        "express": "^4.17.1",
-        "axios": "^0.21.1"
+        "axios": "^0.21.1",
+        "express": "^4.17.1"
+    },
+    "devDependencies": {
+        "supertest": "^7.0.0"
     }
 }
