@@ -97,7 +97,7 @@ nodesNamespace.on('connection', (socket) => {
         console.log(`Received new coordinator: ${newCoordinatorId}`); // remove
         let coordinator = handleNewCoordinator(nodeId, newCoordinatorId, nodes, getCoordinator(), registerWithDirector);
         coordinatorId = coordinator.nodeId;
-        coordinatorAddress = coordinator.nodeAddress.io.uri;
+        coordinatorAddress = coordinator.nodeAddress;
     });
     // An election request is received
     socket.on('election', (coordinatorCandidateId) => {
@@ -110,7 +110,7 @@ nodesNamespace.on('connection', (socket) => {
             registerWithDirector
         );
         coordinatorId = coordinator.nodeId;
-        coordinatorAddress = coordinator.nodeAddress.io.uri;
+        coordinatorAddress = coordinator.nodeAddress;
     });
 });
 
@@ -294,7 +294,7 @@ const sendHeartbeatToCoordinator = async () => {
         if (missedHeartbeats >= maxMissedHeartbeats) {
             let coordinator = initiateElection(nodeId, nodes, getCoordinator(), registerWithDirector);
             coordinatorId = coordinator.nodeId;
-            coordinatorAddress = coordinator.nodeAddress.io.uri;
+            coordinatorAddress = coordinator.nodeAddress;
         }
     }
 };
