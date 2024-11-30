@@ -21,7 +21,7 @@ const compareMessages = (a, b) => {
 const discussionQueue = new PriorityQueue(compareMessages);
 
 const handleNewMessage = (vectorClock, msg) => {
-    const { id, nodeId: msgNodeId, vectorClock: msgVectorClock, message, timestamp } = msg;
+    const { id, nodeId: msgNodeId, nodeHost: msgNodeHost, vectorClock: msgVectorClock, message, timestamp } = msg;
 
     const existingMessage = discussionQueue.toArray().find((m) => m.id === id);
     if (existingMessage) {
@@ -49,6 +49,7 @@ const handleNewMessage = (vectorClock, msg) => {
     discussionQueue.enqueue({
         id,
         nodeId: msgNodeId,
+        nodeHost: msgNodeHost,
         vectorClock: { ...msgVectorClock },
         message: messageText, // Use the extracted message text
         timestamp

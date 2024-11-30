@@ -244,6 +244,7 @@ const sendNewMessage = async (message) => {
     const newMessage = {
         id: uuidv4(),
         nodeId,
+        nodeHost: NODE_HOST,
         vectorClock: { ...vectorClock },
         message: messageText, // Use the extracted message text
         timestamp: Date.now()
