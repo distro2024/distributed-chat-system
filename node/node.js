@@ -88,10 +88,16 @@ nodesNamespace.on('connection', (socket) => {
     });
 
     // Listen for updated nodes list
-    socket.on('update_nodes', ({ updatedNodes }) => {
+    socket.on('update_nodes', (updatedNodes) => {
         console.log(`Received updated nodes list: ${JSON.stringify(updatedNodes)}`);
         // Update the nodes list
-        nodes = updatedNodes;
+        newNodes = updatedNodes.map((node) => ({
+            nodeId: node.nodeId,
+            nodeAddress: node.nodeAddress,
+            socket: clientIo(`${node.nodeAddress}/nodes`),
+            lastHeartbeat: Date.now()
+        }));
+        nodes = newNodes;
     });
 
     // Incoming requests regarding election process
@@ -379,10 +385,15 @@ const addOrUpdateNode = (newNode) => {
 };
 
 const emitUpdatedNodes = () => {
+    nodesToEmit = nodes.map((node) => ({
+        nodeId: node.nodeId,
+        nodeAddress: node.nodeAddress
+    }));
+
     for (let node of nodes) {
         if (node.nodeId !== nodeId && node.socket) {
             console.log(`Sending updated nodes list to node: ${node.nodeAddress}`);
-            node.socket.emit('update_nodes', { nodes });
+            node.socket.emit('update_nodes', nodesToEmit);
         }
     }
 }
