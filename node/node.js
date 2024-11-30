@@ -72,6 +72,7 @@ nodesNamespace.on('connection', (socket) => {
         serverIo.emit('client_message', msg.message);
     });
 
+    // TODO: REMOVE WHEN SAFE
     // Listen for new node registrations
     socket.on('new_node', (node) => {
         console.log(`Received new node: ${JSON.stringify(node)}`);
@@ -86,6 +87,19 @@ nodesNamespace.on('connection', (socket) => {
         addOrUpdateNode(node);
     });
 
+    // Listen for updated nodes list
+    socket.on('update_nodes', (updatedNodes) => {
+        console.log(`Received updated nodes list: ${JSON.stringify(updatedNodes)}`);
+        // Update the nodes list
+        newNodes = updatedNodes.map((node) => ({
+            nodeId: node.nodeId,
+            nodeAddress: node.nodeAddress,
+            socket: clientIo(`${node.nodeAddress}/nodes`),
+            lastHeartbeat: Date.now()
+        }));
+        nodes = newNodes;
+    });
+
     // Incoming requests regarding election process
     // A vote is received from another node
     socket.on('vote', (voterId) => {
@@ -94,10 +108,10 @@ nodesNamespace.on('connection', (socket) => {
     });
     // A new coordinator is elected
     socket.on('update-coordinator', (newCoordinatorId) => {
-        console.log(`Received new coordinator: ${newCoordinatorId}`); // remove
-        let coordinator = handleNewCoordinator(nodeId, newCoordinatorId, nodes, getCoordinator(), registerWithDirector);
+        let coordinator = handleNewCoordinator(nodeId, newCoordinatorId, nodes, getCoordinator(), setAsCoordinator);
+        console.log(`Received new coordinator: ${coordinator.nodeAddress}`); // remove
         coordinatorId = coordinator.nodeId;
-        coordinatorAddress = coordinator.nodeAddress.io.uri;
+        coordinatorAddress = coordinator.nodeAddress;
     });
     // An election request is received
     socket.on('election', (coordinatorCandidateId) => {
@@ -107,10 +121,10 @@ nodesNamespace.on('connection', (socket) => {
             nodes,
             coordinatorCandidateId,
             getCoordinator(),
-            registerWithDirector
+            setAsCoordinator
         );
         coordinatorId = coordinator.nodeId;
-        coordinatorAddress = coordinator.nodeAddress.io.uri;
+        coordinatorAddress = coordinator.nodeAddress;
     });
 });
 
@@ -134,25 +148,17 @@ app.post('/onboard_node', (req, res) => {
 
     console.log(`New node onboarded: ${newNode.nodeAddress}`);
 
-    // Emit the new_node event to all connected nodes
-    for (let node of nodes) {
-        if (node.nodeId !== nodeId && node.socket) {
-            node.socket.emit('new_node', {
-                nodeId: newNode.nodeId,
-                nodeAddress: newNode.nodeAddress
-            });
-        }
-    }
-
     console.log(neighbours);
     res.json({ neighbours, discussion });
+
+    // Emit updated nodes list to nodes
+    emitUpdatedNodes();
 });
 
 // Send heartbeat signals to the director
 const sendHeartbeatToDirector = async () => {
     if (isCoordinator) {
         console.log('Sending heartbeat to director...');
-        console.log('coordinatorId', coordinatorId, 'coordinatorAddress', coordinatorAddress);
         try {
             await axios.post(`${DIRECTOR_URL}/update_coordinator`, {
                 nodeId: coordinatorId,
@@ -160,9 +166,9 @@ const sendHeartbeatToDirector = async () => {
             });
             console.log('Heartbeat sent to Director');
         } catch (error) {
-            console.error('Error sending heartbeat to Director:', error.message);
+            console.error(`Error sending heartbeat to Director: ${error.message}`);
             isCoordinator = false;
-            initiateElection(nodeId, nodes, getCoordinator(), registerWithDirector);
+            initiateElection(nodeId, nodes, getCoordinator(), setAsCoordinator);
         }
     }
 };
@@ -173,13 +179,19 @@ const sendHeartbeatToDirector = async () => {
 
 // Endpoint to receive heartbeats from other nodes
 app.post('/heartbeat', (req, res) => {
-    console.log(`Received heartbeat from node: ${req.body.nodeId}`);
+    if (nodes.some((node) => node.nodeId === req.body.nodeId)) {
+        senderNode = nodes.find((node) => node.nodeId === req.body.nodeId);
+        console.log(`Received heartbeat from node: ${senderNode.nodeAddress}`);
+        // update last heartbeat time for the node
+        nodes.find((node) => node.nodeId === req.body.nodeId).lastHeartbeat = Date.now();
+    }
 
     res.sendStatus(200);
 });
 
 const registerWithDirector = async () => {
     // node discovery via Node Director
+    console.log(`Registering with Node Director: ${DIRECTOR_URL}`);
     try {
         const newNode = {
             nodeId,
@@ -199,11 +211,13 @@ const registerWithDirector = async () => {
         nodes.push({
             nodeId,
             nodeAddress: NODE_HOST,
-            socket: clientIo(`${NODE_HOST}/nodes`)
+            socket: clientIo(`${NODE_HOST}/nodes`),
+            lastHeartbeat: Date.now()
         });
 
         // if I'm not the coordinator, onboard with the coordinator
         if (!isCoordinator) {
+            console.log(`Onboarding with coordinator:', ${coordinator.nodeAddress}`);
             const response = await axios.post(`${coordinatorAddress}/onboard_node`, newNode);
             const neighbours = response.data.neighbours;
             discussion = response.data.discussion;
@@ -212,9 +226,11 @@ const registerWithDirector = async () => {
             neighbours.forEach((neighbour) => {
                 addOrUpdateNode(neighbour);
             });
+        } else {
+            console.log('Taking over as coordinator. Assuming control...');
         }
     } catch (error) {
-        console.error('Error registering with director:', error.message);
+        console.error(`Error registering with director: ${error.message}`);
     }
 };
 
@@ -249,8 +265,43 @@ const sendNewMessage = async (message) => {
     serverIo.emit('client_message', messageText);
 };
 
-if (isCoordinator) {
-    setInterval(sendHeartbeatToDirector, 5000);
+
+const clearZombieNodes = () => {
+    if (isCoordinator) {
+        hasUpdates = false;
+        // Iterate over the nodes list and remove any nodes
+        // which have not sent a heartbeat in the last 20 seconds
+        for (let node of nodes) {
+            if (node.nodeId !== nodeId && node.socket && Date.now() - node.lastHeartbeat > 20000) {
+                console.log(`Removing zombie-node: ${node.nodeAddress}`);
+                node.socket.disconnect(true);
+                nodes = nodes.filter((n) => n.nodeId !== node.nodeId);
+                hasUpdates = true;
+            }
+        }
+        if (hasUpdates) {
+            // Emit updated nodes list to nodes
+            emitUpdatedNodes();
+        } else {
+            console.log('No zombie nodes found');
+        }
+    }
+}
+
+
+setInterval(sendHeartbeatToDirector, 5000);
+setInterval(clearZombieNodes, 20000);
+
+const setAsCoordinator = () => {
+    console.log("Assuming coordinator role. Taking over the network");
+    isCoordinator = true;
+    coordinatorId = nodeId;
+    coordinatorAddress = NODE_HOST;
+    // set last heartbeat to all nodes to current time
+    nodes.forEach((node) => {
+        node.lastHeartbeat = Date.now();
+    });
+
 }
 
 registerWithDirector();
@@ -287,14 +338,14 @@ const sendHeartbeatToCoordinator = async () => {
                 missedHeartbeats++;
             }
         } catch (error) {
-            console.error('Error during heartbeat:', error);
+            console.error(`Error during heartbeat: ${error}`);
             // in case of an error, increment the missedHeartbeats counter
             missedHeartbeats++;
         }
         if (missedHeartbeats >= maxMissedHeartbeats) {
-            let coordinator = initiateElection(nodeId, nodes, getCoordinator(), registerWithDirector);
+            let coordinator = initiateElection(nodeId, nodes, getCoordinator(), setAsCoordinator);
             coordinatorId = coordinator.nodeId;
-            coordinatorAddress = coordinator.nodeAddress.io.uri;
+            coordinatorAddress = coordinator.nodeAddress;
         }
     }
 };
@@ -318,7 +369,8 @@ const addOrUpdateNode = (newNode) => {
         nodes[existingNodeIndex] = {
             nodeId: newNode.nodeId,
             nodeAddress: newNode.nodeAddress,
-            socket: clientIo(`${newNode.nodeAddress}/nodes`)
+            socket: clientIo(`${newNode.nodeAddress}/nodes`),
+            lastHeartbeat: Date.now()
         };
 
         console.log(`Updated node list with new node: ${newNode.nodeAddress}`);
@@ -327,12 +379,27 @@ const addOrUpdateNode = (newNode) => {
         nodes.push({
             nodeId: newNode.nodeId,
             nodeAddress: newNode.nodeAddress,
-            socket: clientIo(`${newNode.nodeAddress}/nodes`)
+            socket: clientIo(`${newNode.nodeAddress}/nodes`),
+            lastHeartbeat: Date.now()
         });
 
         console.log(`Added new node: ${newNode.nodeAddress}`);
     }
 };
+
+const emitUpdatedNodes = () => {
+    nodesToEmit = nodes.map((node) => ({
+        nodeId: node.nodeId,
+        nodeAddress: node.nodeAddress
+    }));
+
+    for (let node of nodes) {
+        if (node.nodeId !== nodeId && node.socket) {
+            console.log(`Sending updated nodes list to node: ${node.nodeAddress}`);
+            node.socket.emit('update_nodes', nodesToEmit);
+        }
+    }
+}
 
 const getCoordinator = () => {
     return nodes.find((node) => node.nodeId === coordinatorId);
