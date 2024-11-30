@@ -94,8 +94,8 @@ nodesNamespace.on('connection', (socket) => {
     });
     // A new coordinator is elected
     socket.on('update-coordinator', (newCoordinatorId) => {
-        console.log(`Received new coordinator: ${newCoordinatorId}`); // remove
-        let coordinator = handleNewCoordinator(nodeId, newCoordinatorId, nodes, getCoordinator(), registerWithDirector);
+        let coordinator = handleNewCoordinator(nodeId, newCoordinatorId, nodes, getCoordinator(), setAsCoordinator);
+        console.log(`Received new coordinator: ${coordinator.nodeAddress}`); // remove
         coordinatorId = coordinator.nodeId;
         coordinatorAddress = coordinator.nodeAddress;
     });
@@ -107,7 +107,7 @@ nodesNamespace.on('connection', (socket) => {
             nodes,
             coordinatorCandidateId,
             getCoordinator(),
-            registerWithDirector
+            setAsCoordinator
         );
         coordinatorId = coordinator.nodeId;
         coordinatorAddress = coordinator.nodeAddress;
@@ -152,7 +152,7 @@ app.post('/onboard_node', (req, res) => {
 const sendHeartbeatToDirector = async () => {
     if (isCoordinator) {
         console.log('Sending heartbeat to director...');
-        console.log('coordinatorId', coordinatorId, 'coordinatorAddress', coordinatorAddress);
+        console.log(`coordinatorId ${coordinatorId} coordinatorAddress ${coordinatorAddress}`);
         try {
             await axios.post(`${DIRECTOR_URL}/update_coordinator`, {
                 nodeId: coordinatorId,
@@ -160,9 +160,9 @@ const sendHeartbeatToDirector = async () => {
             });
             console.log('Heartbeat sent to Director');
         } catch (error) {
-            console.error('Error sending heartbeat to Director:', error.message);
+            console.error(`Error sending heartbeat to Director: ${error.message}`);
             isCoordinator = false;
-            initiateElection(nodeId, nodes, getCoordinator(), registerWithDirector);
+            initiateElection(nodeId, nodes, getCoordinator(), setAsCoordinator);
         }
     }
 };
@@ -173,13 +173,18 @@ const sendHeartbeatToDirector = async () => {
 
 // Endpoint to receive heartbeats from other nodes
 app.post('/heartbeat', (req, res) => {
-    console.log(`Received heartbeat from node: ${req.body.nodeId}`);
+    if (nodes.some((node) => node.nodeId === req.body.nodeId)) {
+        senderNode = nodes.find((node) => node.nodeId === req.body.nodeId);
+        // update last heartbeat time for the node
+        console.log(`Received heartbeat from node: ${senderNode.nodeAddress}`);
+    }
 
     res.sendStatus(200);
 });
 
 const registerWithDirector = async () => {
     // node discovery via Node Director
+    console.log(`Registering with Node Director: ${DIRECTOR_URL}`);
     try {
         const newNode = {
             nodeId,
@@ -204,6 +209,7 @@ const registerWithDirector = async () => {
 
         // if I'm not the coordinator, onboard with the coordinator
         if (!isCoordinator) {
+            console.log(`Onboarding with coordinator:', ${coordinator.nodeAddress}`);
             const response = await axios.post(`${coordinatorAddress}/onboard_node`, newNode);
             const neighbours = response.data.neighbours;
             discussion = response.data.discussion;
@@ -212,9 +218,11 @@ const registerWithDirector = async () => {
             neighbours.forEach((neighbour) => {
                 addOrUpdateNode(neighbour);
             });
+        } else {
+            console.log('Taking over as coordinator. Assuming control...');
         }
     } catch (error) {
-        console.error('Error registering with director:', error.message);
+        console.error(`Error registering with director: ${error.message}`);
     }
 };
 
@@ -249,8 +257,17 @@ const sendNewMessage = async (message) => {
     serverIo.emit('client_message', messageText);
 };
 
-if (isCoordinator) {
-    setInterval(sendHeartbeatToDirector, 5000);
+
+
+setInterval(sendHeartbeatToDirector, 5000);
+
+
+const setAsCoordinator = () => {
+    console.log("Assuming coordinator role. Taking over the network");
+    isCoordinator = true;
+    coordinatorId = nodeId;
+    coordinatorAddress = NODE_HOST;
+
 }
 
 registerWithDirector();
@@ -287,12 +304,12 @@ const sendHeartbeatToCoordinator = async () => {
                 missedHeartbeats++;
             }
         } catch (error) {
-            console.error('Error during heartbeat:', error);
+            console.error(`Error during heartbeat: ${error}`);
             // in case of an error, increment the missedHeartbeats counter
             missedHeartbeats++;
         }
         if (missedHeartbeats >= maxMissedHeartbeats) {
-            let coordinator = initiateElection(nodeId, nodes, getCoordinator(), registerWithDirector);
+            let coordinator = initiateElection(nodeId, nodes, getCoordinator(), setAsCoordinator);
             coordinatorId = coordinator.nodeId;
             coordinatorAddress = coordinator.nodeAddress;
         }
