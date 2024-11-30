@@ -181,8 +181,9 @@ const sendHeartbeatToDirector = async () => {
 app.post('/heartbeat', (req, res) => {
     if (nodes.some((node) => node.nodeId === req.body.nodeId)) {
         senderNode = nodes.find((node) => node.nodeId === req.body.nodeId);
-        // update last heartbeat time for the node
         console.log(`Received heartbeat from node: ${senderNode.nodeAddress}`);
+        // update last heartbeat time for the node
+        nodes.find((node) => node.nodeId === req.body.nodeId).lastHeartbeat = Date.now();
     }
 
     res.sendStatus(200);
@@ -281,6 +282,8 @@ const clearZombieNodes = () => {
         if (hasUpdates) {
             // Emit updated nodes list to nodes
             emitUpdatedNodes();
+        } else {
+            console.log('No zombie nodes found');
         }
     }
 }
