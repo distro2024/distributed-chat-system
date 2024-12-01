@@ -4,10 +4,20 @@
     "description": "",
     "main": "director.js",
     "scripts": {
-        "start": "node director.js"
+        "start": "node index.js",
+        "test": "node --test --test-concurrency=1",
+        "format": "prettier --write .",
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix"
     },
     "dependencies": {
-        "express": "^4.17.1",
-        "axios": "^0.21.1"
+        "axios": "^0.21.1",
+        "express": "^4.17.1"
+    },
+    "devDependencies": {
+        "supertest": "^7.0.0",
+        "@eslint/js": "^9.15.0",
+        "eslint": "^9.15.0",
+        "prettier": "^3.4.1"
     }
 }
