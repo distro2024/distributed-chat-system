@@ -18,7 +18,9 @@
             socket.on('client_message', (message) => {
                 const messagesDiv = document.getElementById('messages');
                 const messageElement = document.createElement('p');
-                messageElement.textContent = message;
+                const timestamp = formatTimestamp(Date.now());
+                const host = window.location.href.replace(/\/$/, '');
+                messageElement.textContent = `[${timestamp}] <${host}>: ${message}`;
                 messagesDiv.appendChild(messageElement);
             });
 
@@ -27,7 +29,9 @@
                 messagesDiv.innerHTML = '';
                 discussion.forEach((message) => {
                     const messageElement = document.createElement('p');
-                    messageElement.textContent = message.message;
+                    const timestamp = formatTimestamp(message.timestamp);
+                    const messageText = `[${timestamp}] <${message.nodeHost}>: ${message.message}`;
+                    messageElement.textContent = messageText;
                     messagesDiv.appendChild(messageElement);
                 });
             });
@@ -37,6 +41,19 @@
                 const messageText = messageInput.value;
                 socket.emit('client_message', messageText);
                 messageInput.value = '';
+            }
+
+            function formatTimestamp(timestamp) {
+                const date = new Date(timestamp);
+                const hours = date.getHours().toString().padStart(2, '0');
+                const minutes = date.getMinutes().toString().padStart(2, '0');
+                const seconds = date.getSeconds().toString().padStart(2, '0');
+
+                const day = date.getDate().toString().padStart(2, '0');
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const year = date.getFullYear();
+
+                return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
             }
         </script>
     </body>
