@@ -85,10 +85,23 @@ http://localhost:4002
 ```
 ## Instructions for developers
 
-### Linter
-The team uses eslint for linting and it is included as a dependency. 
-- It is recommended that all team members use when possible plugins for their IDEs to automatically lint the code. 
-- Alternatively linting can be done with the command `npm eslint` (it's good to use CLI eslint in any case to see open issues)
+### Code Quality Tools
+
+This project uses ESLint and Prettier to ensure code quality and consistency. Both are included as dev dependencies in the project.
+
+
+#### ESLint
+
+- It is recommended that all team members use, when possible, plugins for their IDEs to automatically lint the code.
+
+- Alternatively, linting can be done with the command `npm run lint` (it's good to use CLI ESLint in any case to see open issues).
+
+
+#### Prettier
+
+- It is recommended that all team members use Prettier plugins for their IDEs to automatically format the code on save. This helps ensure consistent code style across the project.
+
+- Alternatively, formatting can be done with the command `npm run format` (it's good to use CLI Prettier in any case to see all files that were changed). This command will format all files in the project that are supported by Prettier. You can also specify individual files or directories to format.
 
 ### Unittests
 The team should write code in a manner that supports unittesting of different functionalities. With a proof-of-concept deadlines are tight and workhours low, so sometimes compromises have to be made. As saifguards we follow these steps:
