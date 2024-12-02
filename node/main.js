@@ -8,10 +8,13 @@ const { handleIncomingVote, handleNewCoordinator, sendElectionResponse } = requi
 const socketIo = require('socket.io');
 const { handleNewMessage } = require('./handleNewMessage');
 
+DIRECTOR_URL = process.env.DIRECTOR_URL || 'http://localhost:3000';
+PORT = process.env.PORT || 4000;
+NODE_HOST = process.env.NODE_HOST || `http://localhost:${PORT}`;
+
 // Create node instance
 let nodeInstance = require('./node');
-let thisNode = new nodeInstance();
-
+let thisNode = new nodeInstance(DIRECTOR_URL, NODE_HOST);
 
 // Define environment variables with default values
 
@@ -127,8 +130,8 @@ nodesNamespace.on('connection', (socket) => {
 //
 
 app.post('/onboard_node', (req, res) => {
-    if (isCoordinator && req.body && req.body.nodeId !== nodeId) {
-        coordinatorInstance.onboardNode(req, res);
+    if (thisNode.isCoordinator && req.body && req.body.nodeId !== thisNode.nodeId) {
+        thisNode.onboardNode(req, res);
     }
 });
 
@@ -153,11 +156,12 @@ const sendNewMessage = async (message) => {
     const messageText = typeof message === 'string' ? message : '';
 
     // Increment the local vector clock
-    vectorClock[nodeId] = (vectorClock[nodeId] || 0) + 1;
+    vectorClock[thisNode.nodeId] = (vectorClock[thisNode.nodeId] || 0) + 1;
 
     const newMessage = {
         id: uuidv4(),
-        nodeId,
+        nodeId: thisNode.nodeId,
+        nodeHost: thisNode.nodeHost,
         vectorClock: { ...vectorClock },
         message: messageText, // Use the extracted message text
         timestamp: Date.now()
@@ -170,7 +174,7 @@ const sendNewMessage = async (message) => {
     // Broadcast the message to all other nodes
     for (let node of thisNode.getNodes()) {
         console.log(node.nodeId);
-        if (node.nodeId !== nodeId && node.socket) {
+        if (node.nodeId !== thisNode.nodeId && node.socket) {
             node.socket.emit('node_message', newMessage);
         }
     }
