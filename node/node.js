@@ -1,7 +1,9 @@
 const axios = require('axios');
 const { v4: uuidv4 } = require('uuid');
 const clientIo = require('socket.io-client');
+
 const { initiateElection } = require('./election');
+const { handleNewMessage } = require('./handleNewMessage');
 
 module.exports = class Node {
 
@@ -18,6 +20,9 @@ module.exports = class Node {
         this.discussion = [];
         this.directorUrl = DIRECTOR_URL;
         this.nodeHost = NODE_HOST;
+
+        // vector clock for the consistency of the chat
+        this.vectorClock = { [this.nodeId]: 0 }; // Initialize the vector clock with the current node's ID
 
 
         // HEARBEATS
@@ -150,6 +155,38 @@ module.exports = class Node {
 
             console.log(`Added new node: ${newNode.nodeAddress}`);
         }
+    };
+
+    sendNewMessage = async (message, socket) => {
+        // If message is an object, extract the message text
+        const messageText = typeof message === 'string' ? message : '';
+
+        // Increment the local vector clock
+        this.vectorClock[this.nodeId] = (this.vectorClock[this.nodeId] || 0) + 1;
+
+        const newMessage = {
+            id: uuidv4(),
+            nodeId: this.nodeId,
+            nodeHost: this.nodeHost,
+            vectorClock: { ...this.vectorClock },
+            message: messageText, // Use the extracted message text
+            timestamp: Date.now()
+        };
+        // Save the message for further processing
+        let temp = handleNewMessage(this.vectorClock, newMessage, this.discussion);
+        this.vectorClock = temp.vectorClock;
+        this.discussion = temp.discussion;
+
+        // Broadcast the message to all other nodes
+        for (let node of this.nodes) {
+            console.log(node.nodeId);
+            if (node.nodeId !== this.nodeId && node.socket) {
+                node.socket.emit('node_message', newMessage);
+            }
+        }
+
+        // Emit the message to connected clients
+        socket.emit('client_message', messageText);
     };
 
     // COORINATOR TASKS BEGIN
