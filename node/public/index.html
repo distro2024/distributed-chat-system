@@ -18,9 +18,8 @@
             socket.on('client_message', (message) => {
                 const messagesDiv = document.getElementById('messages');
                 const messageElement = document.createElement('p');
-                const timestamp = formatTimestamp(Date.now());
-                const host = window.location.href.replace(/\/$/, '');
-                messageElement.textContent = `[${timestamp}] <${host}>: ${message}`;
+                const timestamp = formatTimestamp(message.timestamp);
+                messageElement.textContent = `[${timestamp}] <${message.nodeHost}>: ${message.message}`;
                 messagesDiv.appendChild(messageElement);
             });
 

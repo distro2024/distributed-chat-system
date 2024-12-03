@@ -2,9 +2,9 @@
     "name": "node",
     "version": "1.0.0",
     "description": "",
-    "main": "node.js",
+    "main": "main.js",
     "scripts": {
-        "start": "node node.js",
+        "start": "node main.js",
         "test": "jest --verbose",
         "format": "prettier --write .",
         "lint": "eslint .",
