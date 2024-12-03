@@ -58,8 +58,6 @@ module.exports = class Node {
 
             console.log('Registered with Node Director');
 
-            // check whether I'm the coordinator
-            this.isCoordinator = this.nodeId === coordinator.nodeId;
             // save the coordinator information
             this.coordinatorId = coordinator.nodeId;
             this.coordinatorAddress = coordinator.nodeAddress;
@@ -72,7 +70,7 @@ module.exports = class Node {
             });
 
             // if I'm not the coordinator, onboard with the coordinator
-            if (!this.isCoordinator) {
+            if (!(this.nodeId === coordinator.nodeId)) {
                 console.log(`Onboarding with coordinator:', ${coordinator.nodeAddress}`);
                 const response = await axios.post(`${this.coordinatorAddress}/onboard_node`, newNode);
                 const neighbours = response.data.neighbours;
@@ -259,9 +257,11 @@ module.exports = class Node {
     setAsCoordinator = () => {
         if (!this.isCoordinator) {
             console.log("Assuming coordinator role. Taking over the network");
+            this.isCoordinator = true;
+            this.coordinatorAddress = this.nodeHost;
+            this.coordinatorId = this.nodeId;
             this.heartbeatsToDirector = setInterval(() => this.sendHeartbeatToDirector(), 5000);
             this.clearingZombienodes = setInterval(() => this.clearZombieNodes(), 20000);
-            this.isCoordinator = true;
         }
     }
 
