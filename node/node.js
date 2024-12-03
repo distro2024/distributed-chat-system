@@ -186,7 +186,7 @@ module.exports = class Node {
         }
 
         // Emit the message to connected clients
-        socket.emit('client_message', messageText);
+        socket.emit('client_message', newMessage);
     };
 
     // COORINATOR TASKS BEGIN

@@ -36,7 +36,7 @@ module.exports = (server, { thisNode }) => {
             thisNode.discussion = temp.discussion;
 
             // Broadcast the message to all connected clients
-            serverIo.emit('client_message', msg.message);
+            serverIo.emit('client_message', msg);
         });
 
         // Listen for updated nodes list
