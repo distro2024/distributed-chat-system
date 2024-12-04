@@ -2,6 +2,7 @@ const axios = require('axios');
 const { v4: uuidv4 } = require('uuid');
 const clientIo = require('socket.io-client');
 const { initiateElection } = require('./election');
+const log = require('./constants').log;
 
 module.exports = class Node {
 
@@ -41,17 +42,17 @@ module.exports = class Node {
 
     registerWithDirector = async () => {
         // node discovery via Node Director
-        console.log(`Registering with Node Director: ${this.directorUrl}`);
+        console.log(`${log.INFO} Registering with Node Director: ${this.directorUrl}`);
         try {
             const newNode = {
                 nodeId: this.nodeId,
                 nodeAddress: this.nodeHost
             };
-            console.log(`newNode: ${JSON.stringify(newNode)}`);
+            console.log(`${log.INFO} newNode: ${JSON.stringify(newNode)}`);
             const response = await axios.post(`${this.directorUrl}/join_chat`, newNode);
             const coordinator = response.data.coordinator;
 
-            console.log('Registered with Node Director');
+            console.log(`${log.INFO} Registered with Node Director`);
 
             // check whether I'm the coordinator
             this.isCoordinator = this.nodeId === coordinator.nodeId;
@@ -68,7 +69,7 @@ module.exports = class Node {
 
             // if I'm not the coordinator, onboard with the coordinator
             if (!this.isCoordinator) {
-                console.log(`Onboarding with coordinator:', ${coordinator.nodeAddress}`);
+                console.log(`${log.INFO} Onboarding with coordinator:', ${coordinator.nodeAddress}`);
                 const response = await axios.post(`${this.coordinatorAddress}/onboard_node`, newNode);
                 const neighbours = response.data.neighbours;
                 this.discussion = response.data.discussion;
@@ -78,11 +79,10 @@ module.exports = class Node {
                     this.addOrUpdateNode(neighbour);
                 });
             } else {
-                console.log('Taking over as coordinator. Assuming control...');
                 this.setAsCoordinator();
             }
         } catch (error) {
-            console.error(`Error registering with director: ${error.message}`);
+            console.error(`${log.ERROR} Error registering with director: ${error.message}`);
         }
     };
 
@@ -90,7 +90,7 @@ module.exports = class Node {
     // if response is 200 OK, reset the missedHeartbeats counter
     sendHeartbeatToCoordinator = async () => {
         if (!this.isCoordinator) {
-            console.log(`Sending heartbeat to coordinator: ${this.coordinatorAddress}`);
+            console.log(`${log.SCHEDULED_TASK} Sending heartbeat to coordinator: ${this.coordinatorAddress}`);
             try {
                 const response = await axios.post(`${this.coordinatorAddress}/heartbeat`, {
                     nodeId: this.nodeId
@@ -103,7 +103,7 @@ module.exports = class Node {
                     this.missedHeartbeats++;
                 }
             } catch (error) {
-                console.error(`Error during heartbeat: ${error}`);
+                console.error(`${log.ERROR} Error during heartbeat: ${error}`);
                 // in case of an error, increment the missedHeartbeats counter
                 this.missedHeartbeats++;
             }
@@ -127,7 +127,7 @@ module.exports = class Node {
             // If the node already exists, disconnect the existing socket
             if (this.nodes[existingNodeIndex].socket) {
                 this.nodes[existingNodeIndex].socket.disconnect(true);
-                console.log(`Disconnected existing socket for node ${newNode.nodeAddress}`);
+                console.log(`${log.INFO} Disconnected existing socket for node ${newNode.nodeAddress}`);
             }
 
             // Create a new socket connection
@@ -138,7 +138,7 @@ module.exports = class Node {
                 lastHeartbeat: Date.now()
             };
 
-            console.log(`Updated node list with new node: ${newNode.nodeAddress}`);
+            console.log(`${log.INFO} Updated node list with new node: ${newNode.nodeAddress}`);
         } else {
             // Create a new socket connection for the new node
             this.nodes.push({
@@ -148,7 +148,7 @@ module.exports = class Node {
                 lastHeartbeat: Date.now()
             });
 
-            console.log(`Added new node: ${newNode.nodeAddress}`);
+            console.log(`${log.INFO} Added new node: ${newNode.nodeAddress}`);
         }
     };
 
@@ -156,14 +156,14 @@ module.exports = class Node {
     onboardNode = (req, res) =>  {
         let newNode = req.body;
         // onboarding a new node to chat
-        console.log(`Onboarding new node: ${newNode.nodeAddress}`);
+        console.log(`${log.INFO} ${log.COORDINATOR} Onboarding new node: ${newNode.nodeAddress}`);
         // Prepare a list of current nodes to send to the new node
         const neighbours = this.nodes.map((node) => ({
             nodeId: node.nodeId,
             nodeAddress: node.nodeAddress
         }));
         this.addOrUpdateNode(newNode);
-        console.log(`New node onboarded: ${newNode.nodeAddress}`);
+        console.log(`${log.INFO} ${log.COORDINATOR} New node onboarded: ${newNode.nodeAddress}`);
         console.log(neighbours);
         res.json({ neighbours, discussion: this.discussion });
         // Emit updated nodes list to nodes
@@ -173,26 +173,26 @@ module.exports = class Node {
 
     // Send heartbeat signals to the director
     sendHeartbeatToDirector = async () => {
-        console.log('Sending heartbeat to director...');
+        console.log(`${log.SCHEDULED_TASK} ${log.COORDINATOR} Sending heartbeat to director...`);
         try {
             await axios.post(`${this.directorUrl}/update_coordinator`, {
                 nodeId: this.coordinatorId,
                 nodeAddress: this.coordinatorAddress
             });
-            console.log('Heartbeat sent to Director');
+            console.log(`${log.SCHEDULED_TASK} ${log.COORDINATOR} Heartbeat sent to Director`);
         } catch (error) {
-            console.error(`Error sending heartbeat to Director: ${error.message}`);
+            console.error(`${log.SCHEDULED_TASK} ${log.COORDINATOR} Error sending heartbeat to Director: ${error.message}`);
         }
     };
 
     clearZombieNodes = () => {
-        console.log('Going on zombie hunt...')
+        console.log(`${log.SCHEDULED_TASK} ${log.COORDINATOR} Searching for zombie nodes`)
         let hasUpdates = false;
         // Iterate over the nodes list and remove any nodes
         // which have not sent a heartbeat in the last 20 seconds
         for (let node of this.nodes) {
             if (node.nodeId !== this.nodeId && node.socket && Date.now() - node.lastHeartbeat > 20000) {
-                console.log(`Removing zombie-node: ${node.nodeAddress}`);
+                console.log(`${log.SCHEDULED_TASK} ${log.COORDINATOR} Removing zombie-node: ${node.nodeAddress}`);
                 node.socket.disconnect(true);
                 this.nodes = this.nodes.filter((n) => n.nodeId !== node.nodeId);
                 hasUpdates = true;
@@ -202,7 +202,7 @@ module.exports = class Node {
             // Emit updated nodes list to nodes
             this.emitUpdatedNodes();
         } else {
-            console.log('No zombie nodes found');
+            console.log(`${log.SCHEDULED_TASK} ${log.COORDINATOR} No zombie nodes found`);
         }
     }
 
@@ -213,7 +213,7 @@ module.exports = class Node {
         }));
         for (let node of this.nodes) {
             if (node.nodeId !== this.nodeId && node.socket) {
-                console.log(`Sending updated nodes list to node: ${node.nodeAddress}`);
+                console.log(`${log.INFO} ${log.COORDINATOR} Sending updated nodes list to node: ${node.nodeAddress}`);
                 node.socket.emit('update_nodes', nodesToEmit);
             }
         }
@@ -221,7 +221,7 @@ module.exports = class Node {
 
     setAsCoordinator = () => {
         if (!this.isCoordinator) {
-            console.log("Assuming coordinator role. Taking over the network");
+            console.log(`${log.INFO} ${log.COORDINATOR} Assuming coordinator role. Taking over the network`);
             this.heartbeatsToDirector = setInterval(() => this.sendHeartbeatToDirector(), 5000);
             this.clearingZombienodes = setInterval(() => this.clearZombieNodes(), 20000);
             this.isCoordinator = true;
