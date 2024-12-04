@@ -1,8 +1,10 @@
 const axios = require('axios');
 const { v4: uuidv4 } = require('uuid');
 const clientIo = require('socket.io-client');
+
 const { initiateElection } = require('./election');
 const log = require('./constants').log;
+const { handleNewMessage } = require('./handleNewMessage');
 
 module.exports = class Node {
 
@@ -19,6 +21,9 @@ module.exports = class Node {
         this.discussion = [];
         this.directorUrl = DIRECTOR_URL;
         this.nodeHost = NODE_HOST;
+
+        // vector clock for the consistency of the chat
+        this.vectorClock = { [this.nodeId]: 0 }; // Initialize the vector clock with the current node's ID
 
 
         // HEARBEATS
@@ -54,8 +59,6 @@ module.exports = class Node {
 
             console.log(`${log.INFO} Registered with Node Director`);
 
-            // check whether I'm the coordinator
-            this.isCoordinator = this.nodeId === coordinator.nodeId;
             // save the coordinator information
             this.coordinatorId = coordinator.nodeId;
             this.coordinatorAddress = coordinator.nodeAddress;
@@ -68,7 +71,7 @@ module.exports = class Node {
             });
 
             // if I'm not the coordinator, onboard with the coordinator
-            if (!this.isCoordinator) {
+            if (!(this.nodeId === coordinator.nodeId)) {
                 console.log(`${log.INFO} Onboarding with coordinator:', ${coordinator.nodeAddress}`);
                 const response = await axios.post(`${this.coordinatorAddress}/onboard_node`, newNode);
                 const neighbours = response.data.neighbours;
@@ -152,6 +155,38 @@ module.exports = class Node {
         }
     };
 
+    sendNewMessage = async (message, socket) => {
+        // If message is an object, extract the message text
+        const messageText = typeof message === 'string' ? message : '';
+
+        // Increment the local vector clock
+        this.vectorClock[this.nodeId] = (this.vectorClock[this.nodeId] || 0) + 1;
+
+        const newMessage = {
+            id: uuidv4(),
+            nodeId: this.nodeId,
+            nodeHost: this.nodeHost,
+            vectorClock: { ...this.vectorClock },
+            message: messageText, // Use the extracted message text
+            timestamp: Date.now()
+        };
+        // Save the message for further processing
+        let temp = handleNewMessage(this.vectorClock, newMessage, this.discussion);
+        this.vectorClock = temp.vectorClock;
+        this.discussion = temp.discussion;
+
+        // Broadcast the message to all other nodes
+        for (let node of this.nodes) {
+            console.log(node.nodeId);
+            if (node.nodeId !== this.nodeId && node.socket) {
+                node.socket.emit('node_message', newMessage);
+            }
+        }
+
+        // Emit the message to connected clients
+        socket.emit('client_message', newMessage);
+    };
+
     // COORINATOR TASKS BEGIN
     onboardNode = (req, res) =>  {
         let newNode = req.body;
@@ -164,7 +199,6 @@ module.exports = class Node {
         }));
         this.addOrUpdateNode(newNode);
         console.log(`${log.INFO} ${log.COORDINATOR} New node onboarded: ${newNode.nodeAddress}`);
-        console.log(neighbours);
         res.json({ neighbours, discussion: this.discussion });
         // Emit updated nodes list to nodes
         this.emitUpdatedNodes();
@@ -221,10 +255,12 @@ module.exports = class Node {
 
     setAsCoordinator = () => {
         if (!this.isCoordinator) {
-            console.log(`${log.INFO} ${log.COORDINATOR} Assuming coordinator role. Taking over the network`);
+            console.log(`${log.INFO} ${log.COORDINATOR} Assuming coordinator role`);
+            this.isCoordinator = true;
+            this.coordinatorAddress = this.nodeHost;
+            this.coordinatorId = this.nodeId;
             this.heartbeatsToDirector = setInterval(() => this.sendHeartbeatToDirector(), 5000);
             this.clearingZombienodes = setInterval(() => this.clearZombieNodes(), 20000);
-            this.isCoordinator = true;
         }
     }
 

@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const app = express();
-const log = require('./constants').log;
+const log = require('../node/constants').log;
 
 
 // current coordinator
