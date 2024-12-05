@@ -1,3 +1,5 @@
+const log = require('./constants').log;
+
 let isCandidate = false;
 
 /**
@@ -8,17 +10,17 @@ let isCandidate = false;
  * @param {*} setAsCoordinator function to set this node as the coordinator
  */
 const initiateElection = (thisNodeId, nodes, coordinator, setAsCoordinator) => {
-    console.log('Initiating election');
+    console.log(`${log.ELECTION} Initiating election`);
     isCandidate = true;
     nodes.forEach((node) => {
         // Sends a message through a web socket to a node
         // requesting a vote for a new coordinator
         if (node.nodeId > thisNodeId) {
             try {
-                console.log(`Sending election request to node:, ${node.nodeId}`);
+                console.log(`${log.ELECTION} Sending election request to node:, ${node.nodeId}`);
                 node.socket.emit('election', thisNodeId);
             } catch (error) {
-                console.log(`Error sending election request to node: ${node.nodeAddress}, error: ${error}`);
+                console.log(`${log.ELECTION} ${log.ERROR} Error sending election request to node: ${node.nodeAddress}, error: ${error}`);
             }
         }
     });
@@ -39,7 +41,7 @@ const initiateElection = (thisNodeId, nodes, coordinator, setAsCoordinator) => {
  * @param {*} setAsCoordinator function to set this node as the coordinator
  */
 const determineVotingOutcome = (thisNodeId, nodes, coordinator, setAsCoordinator) => {
-    console.log(`Determine voting outcome. isCandidate: ${isCandidate}`);
+    console.log(`${log.ELECTION} Determine voting outcome. isCandidate: ${isCandidate}`);
     if (isCandidate) {
         // send a message to the director to update the coordinator
         setAsCoordinator();
@@ -49,10 +51,10 @@ const determineVotingOutcome = (thisNodeId, nodes, coordinator, setAsCoordinator
         nodes.forEach((node) => {
             if (node.nodeId !== thisNodeId && node.socket) {
                 try {
-                    console.log(`Sending coordinator update to node:, ${node.nodeAddress}`);
+                    console.log(`${log.ELECTION} Sending coordinator update to node:, ${node.nodeAddress}`);
                     node.socket.emit('update-coordinator', thisNodeId);
                 } catch (error) {
-                    console.log(`Error sending coordinator update to node: ${node.nodeAddress}, error: ${error}`);
+                    console.log(`${log.ELECTION} Error sending coordinator update to node: ${node.nodeAddress}, error: ${error}`);
                 }
             }
         });
@@ -68,10 +70,10 @@ const determineVotingOutcome = (thisNodeId, nodes, coordinator, setAsCoordinator
  * @param {any} nodes - A list of all nodes in the network
  */
 const handleIncomingVote = (thisNodeId, voterId, nodes) => {
-    console.log(`Received vote from node: ${voterId}`);
+    console.log(`${log.ELECTION} Received vote from node: ${voterId}`);
     const nodeExists = nodes.some((node) => node.nodeId === voterId);
     if (nodeExists && voterId > thisNodeId) {
-        console.log(`Vote verified, stepping down as candidate, voter: ${nodes.find((node) => node.nodeId === voterId).nodeAddress}`);
+        console.log(`${log.ELECTION} Vote verified, stepping down as candidate, voter: ${nodes.find((node) => node.nodeId === voterId).nodeAddress}`);
         isCandidate = false;
     }
 };
@@ -95,12 +97,12 @@ const handleNewCoordinator = (thisNodeId, newCoordinatorId, nodes, coordinator, 
         if (nodeExists && newCoordinatorId > thisNodeId) {
             isCandidate = false;
             coordinator = nodes.find((node) => node.nodeId === newCoordinatorId);
-            console.log(`New coordinator successfully resolved:' ${coordinator.nodeAddress}`);
+            console.log(`${log.ELECTION} New coordinator successfully resolved:' ${coordinator.nodeAddress}`);
         } else {
             coordinator = initiateElection(thisNodeId, nodes, coordinator, registerWithDirector);
         }
     } catch (error) {
-        console.log(`Error resolving new coordinator: ${error}`);
+        console.log(`${log.ELECTION} ${log.ERROR} Error resolving new coordinator: ${error}`);
     }
 
     return coordinator;
@@ -116,11 +118,12 @@ const handleNewCoordinator = (thisNodeId, newCoordinatorId, nodes, coordinator, 
  * @param {*} registerWithDirector Function to register with the Node Director
  */
 const sendElectionResponse = async (thisNodeId, nodes, candidateId, coordinator, registerWithDirector) => {
+    console.log(`${log.ELECTION} Sending election response to candidate: ${candidateId}`);
     let candidate = nodes.find((node) => node.nodeId === candidateId);
     try {
         candidate.socket.emit('vote', thisNodeId);
     } catch (error) {
-        console.log(`Error sending vote to candidateId: ${candidateId}, error: ${error}`);
+        console.log(`${log.ELECTION} ${log.ERROR} Error sending vote to candidateId: ${candidateId}, error: ${error}`);
     }
     return initiateElection(thisNodeId, nodes, coordinator, registerWithDirector);
 };

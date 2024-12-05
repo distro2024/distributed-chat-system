@@ -1,4 +1,5 @@
 const express = require('express');
+const log = require('./constants').log;
 
 module.exports = ({ thisNode }) => {
     const coordinatorRouter = express.Router();
@@ -14,7 +15,7 @@ module.exports = ({ thisNode }) => {
     coordinatorRouter.post('/heartbeat', (req, res) => {
         if (thisNode.getNodes().some((node) => node.nodeId === req.body.nodeId)) {
             senderNode = thisNode.getNodes().find((node) => node.nodeId === req.body.nodeId);
-            console.log(`Received heartbeat from node: ${senderNode.nodeAddress}`);
+            console.log(`${log.INFO} Received heartbeat from node: ${senderNode.nodeAddress}`);
             // update last heartbeat time for the node
             thisNode.getNodes().find((node) => node.nodeId === req.body.nodeId).lastHeartbeat = Date.now();
         }

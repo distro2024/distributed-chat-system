@@ -1,6 +1,7 @@
 const express = require('express');
 const http = require('http');
 const path = require('path');
+const log = require('./constants').log;
 
 const nodeSockets = require('./sockets');
 const coordinatorRouter = require('./coordinatorRouter');
@@ -24,5 +25,5 @@ app.use(coordinatorRouter({ thisNode }));
 nodeSockets(server, { thisNode });
 
 server.listen(PORT, () => {
-    console.log(`Node service is running on port ${PORT}`);
+    console.log(`${log.INFO} Node service is running on port ${PORT}`);
 });
