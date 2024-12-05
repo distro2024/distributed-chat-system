@@ -4,7 +4,6 @@ const log = require('./constants').log;
 const { PriorityQueue } = require('datastructures-js');
 // This function sorts the messages based on their vector clocks and timestamps
 const compareMessages = (a, b) => {
-    console.log(`${log.INFO} Comparing messages`);
     const vcA = a.vectorClock;
     const vcB = b.vectorClock;
     const allKeys = new Set([...Object.keys(vcA), ...Object.keys(vcB)]);

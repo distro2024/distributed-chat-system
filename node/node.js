@@ -90,21 +90,16 @@ module.exports = class Node {
     };
 
     // Use axios to send a heartbeat to the coordinator
-    // if response is 200 OK, reset the missedHeartbeats counter
+    // the coordinator responds with a 200 status code
     sendHeartbeatToCoordinator = async () => {
         if (!this.isCoordinator) {
-            console.log(`${log.SCHEDULED_TASK} Sending heartbeat to coordinator: ${this.coordinatorAddress}`);
+            console.log(`${log.SCHEDULED_TASK} ${log.NODE} Sending heartbeat to coordinator: ${this.coordinatorAddress}`);
             try {
-                const response = await axios.post(`${this.coordinatorAddress}/heartbeat`, {
+                await axios.post(`${this.coordinatorAddress}/heartbeat`, {
                     nodeId: this.nodeId
                 });
-                if (response.status === 200) {
-                    // reset the missedHeartbeats counter
-                    this.missedHeartbeats = 0;
-                } else {
-                    // increment the missedHeartbeats counter
-                    this.missedHeartbeats++;
-                }
+                this.missedHeartbeats = 0;
+                console.log(`${log.SCHEDULED_TASK} ${log.NODE} Coordinator responded to heartbeat`);
             } catch (error) {
                 console.error(`${log.ERROR} Error during heartbeat: ${error}`);
                 // in case of an error, increment the missedHeartbeats counter
@@ -207,7 +202,7 @@ module.exports = class Node {
 
     // Send heartbeat signals to the director
     sendHeartbeatToDirector = async () => {
-        console.log(`${log.SCHEDULED_TASK} ${log.COORDINATOR} Sending heartbeat to director...`);
+        console.log(`${log.SCHEDULED_TASK} ${log.COORDINATOR} Sending heartbeat to director: ${this.directorUrl}`);
         try {
             await axios.post(`${this.directorUrl}/update_coordinator`, {
                 nodeId: this.coordinatorId,
