@@ -117,6 +117,23 @@ flowchart TD
 
 {{< pagebreak >}}
 
+### Coordinator election
+
+> This subsection contains references to the prototype module ./node/election.js. Each referenced method can be found in this module. 
+
+The first node to join the network will be automatically made the Coordinator. After this, every Coordinator is decided with an election process. The prototype implements an election process based on the well established Bully-algorithm (Garcia-Molina 1982). 
+
+In this implementation all other nodes send a heartbeat to the Coordinator node at pseudo-randomized interval between $[T, 2T]$ seconds. When a node does not receive a reponse to two consecutive heartbeats, it initiates an election by sending an election message to all nodes with an id higher than its id. In the prototype ids are UUIDs and the comparison is an ascending String comparison (i.e. $(aaaa < aaab < aabb < \ldots)$). For implementation see method `initiateElection`. 
+
+After initiating the election, the node waits for a specified time (in the prototype three seconds) for responses. 
+- If no responses arrive, it announces itself as a Coordinator. 
+- If a response from a higher Id node arrived, it denounces its candidacy (module-scoped global variable `isCandidate` is set to false). 
+
+Upon receiving an election request, all nodes initiate their own elections. The idea, as in Bully algorithm, is that the node with the highest id is the only one that should not receive any responses, given that the assumptions set by Garcia-Molina hold (1982). That is, for instance, that no messages are lost during election. 
+
+
+
+
 ### Sending and receiving messages
 
 The nodes will send chat messages to all other nodes in the group discussion. The team will investigate a mechanism for transferring chat messages to each other efficiently. The idea is to simulate multicast functionality that works also when the nodes are in different networks. As a starting point, the team investigates using websockets or HTTP/2-protocol for inter-node communication. As communication between nodes is direct node-to-node discussion, no middleware is required in this proof-of-concept phase.  
@@ -274,3 +291,10 @@ The team maintains active communication through a group discussion on Telegram. 
 University of Helsinki Large Language Model Curre, Microsoft Co-pilot and Chat-GPT have been used to help improve the grammar of the documentation and to polish the text. Separate LLMs have been prompted to provide feedback on text and to suggest improvements. The response has then been evaualuated and with consideration applied to improve the text. 
 
 
+{{< pagebreak >}}
+
+## References
+
+Garcia-Molina H. 1982. Elections in a Distributed Computing System. IEEE Transactions on Computers, 31(1):48–59, Jan. 1982.
+
+Steen, M. van & Tanenbaum, A. S. 2024. Distributed systems / Maarten van Steen, Andrew S. Tanenbaum. Fourth edition, Version 4.02 (2022). Published at unknown.
