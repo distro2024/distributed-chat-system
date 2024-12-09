@@ -192,6 +192,10 @@ The coordinator then responds with the discussion history (a list of message obj
 
 * **Catch-up Mechanism:** New nodes receive the full chat history (`discussion` array), allowing them to become consistent with the rest of the network.
 
+* **Points to consider for future development:**
+    - **Vector Clock size**: Vector clocks grow in size as the number of nodes increases. This can lead to increased storage and communication overhead. Consider strategies to manage clock size, such as pruning old entries.
+    - **Catch-up Optimization**: Sending the entire discussion array to new nodes can be inefficient if the chat history is very large. Consider optimizing the catch-up mechanism, perhaps by sending only a recent portion of the history.
+
 {{< pagebreak >}}
 
 ### Language selection
