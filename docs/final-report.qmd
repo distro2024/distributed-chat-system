@@ -127,10 +127,11 @@ In this implementation all other nodes send a heartbeat to the Coordinator node 
 
 After initiating the election, the node waits for a specified time (in the prototype three seconds) for responses. 
 - If no responses arrive, it announces itself as a Coordinator. 
-- If a response from a higher Id node arrived, it denounces its candidacy (module-scoped global variable `isCandidate` is set to false). 
+- If a response from a higher Id node arrived, it denounces its candidacy (module-scoped global variable `isCandidate` is set to false). For details see method `handleIncomingVote`.
 
-Upon receiving an election request, all nodes initiate their own elections. The idea, as in Bully algorithm, is that the node with the highest id is the only one that should not receive any responses, given that the assumptions set by Garcia-Molina hold (1982). That is, for instance, that no messages are lost during election. 
+Upon receiving an election request, each node initiates its own elections and sends a response `vote` (OK) to the election message (see method `sendElectionResponse`). The idea, as in Bully algorithm, is that the node with the highest id is the only one that should not receive any responses, given that the assumptions set by Garcia-Molina hold (1982). That is, for instance, that no messages are lost during election. 
 
+In future the method and route naming should be clarified. 
 
 
 
