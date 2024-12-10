@@ -156,28 +156,28 @@ Any node (i.e. chat-node) can send chat-messages to other nodes: POST `/message`
 
 #### Election process  
 
-Messages related to the election process with Bully-algorithm:
+Messages related to the election process with the implementation of Bully-algorithm. The messages are represented here in JSON format for clarity. The actual prototype implementation can be reviewed in module `./node/sockets.js`:
 
 
-Any node can initiate election process by sending a request to nodes with higher priority: POST `/election`
+Any node can initiate election process by emitting a request to nodes with higher id to route `/election`
 ```json
 {
-    "node-id": "uuid"
+    "nodeId": "uuid"
 }
 ```
 
-Higher priority nodes respond with an OK: POST `/vote`
+Nodes respond to an election request by emitting a request to the sender of election request to route `/vote`
 ```json
 {
-    "ok": "uuid"
+    "nodeId": "uuid"
 }
 ```
 {{< pagebreak >}}
 
-Once one of the nodes has bullied other into submission, they notify other nodes that they are the new coordinator: POST `/update-coordinator`
+The node with the highest id will not receive any vote requests, and determines it to be the new Coordinator. It then notifies other nodes that they are the new coordinator by emitting their id to route `/update-coordinator`
 ```json
 {
-    "coodinator": "uuid"
+    "nodeId": "uuid"
 }
 ```
 
