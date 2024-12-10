@@ -121,17 +121,17 @@ flowchart TD
 
 > This subsection contains references to the prototype module ./node/election.js. Each referenced method can be found in this module. 
 
-The first node to join the network will be automatically made the Coordinator. After this, every Coordinator is decided with an election process. The prototype implements an election process based on the well established Bully-algorithm (Garcia-Molina 1982). 
+After the distributed system is initialized and Director is running, the first node to join the network will be made the Coordinator by the Director. After this, every Coordinator is decided with an election process. In the prototype the election is initiated when the Coordinator node becomes unresponsive. The prototype implements an election process based on the well established Bully-algorithm (Garcia-Molina 1982). Some inspiration has been taken from the Raft-algorithm as well, which was introduced later in the course. 
 
-In this implementation all other nodes send a heartbeat to the Coordinator node at pseudo-randomized interval between $[T, 2T]$ seconds. When a node does not receive a reponse to two consecutive heartbeats, it initiates an election by sending an election message to all nodes with an id higher than its id. In the prototype ids are UUIDs and the comparison is an ascending String comparison (i.e. $(aaaa < aaab < aabb < \ldots)$). For implementation see method `initiateElection`. 
+In this implementation all other nodes send a heartbeat to the Coordinator node at a pseudo-randomized interval between $[T, 2T]$ seconds. When a node does not receive a reponse to two consecutive heartbeats, it initiates an election by sending an election message to all nodes with an id higher than its id. In the prototype ids are UUIDs and the comparison is an ascending String comparison (i.e. $(aaaa < aaab < aabb < \ldots)$). For implementation see method `initiateElection`. 
 
-After initiating the election, the node waits for a specified time (in the prototype three seconds) for responses. 
-- If no responses arrive, it announces itself as a Coordinator. 
-- If a response from a higher Id node arrived, it denounces its candidacy (module-scoped global variable `isCandidate` is set to false). For details see method `handleIncomingVote`.
+After initiating the election, the node waits for a specified time (in the prototype three seconds) for responses. Then, if: 
+- no responses arrive, it announces itself as a Coordinator to all the nodes in its node list (see method `determineVotingOutcome`). 
+- atleast one response from a higher Id node arrived, it denounces its candidacy (module-scoped global variable `isCandidate` is set to false). For details see method `handleIncomingVote`.
 
 Upon receiving an election request, each node initiates its own elections and sends a response `vote` (OK) to the election message (see method `sendElectionResponse`). The idea, as in Bully algorithm, is that the node with the highest id is the only one that should not receive any responses, given that the assumptions set by Garcia-Molina hold (1982). That is, for instance, that no messages are lost during election. 
 
-In future the method and route naming should be clarified. 
+
 
 
 
@@ -254,6 +254,20 @@ FINAL REPORT INSTRUCTION
 7. Notes about the group members and their participation, work task division, etc. Here you also may report, if you feel that the points collected to group should be split unevenly among group members. Use percentages when descripting this balancing view point. 
 ```
 
+
+### Election process
+
+The election process in the prototype is based on the well-established Bully algorithm and took additionally loosely some inspiration from the Raft-algorithm (heartbeats, randomized time-intervals for sending heartbeats). In a MVP the implementation should be refined and fault-tolerance should be improved. Also naming conventions should be reconsidered. 
+
+#### Improving fault-tolerance  
+
+The current implementation is based on the assumptions presented by Garcia-Molina (1982). For instance, it is assumed that no messages are lost. In reality, messages can be lost and this could lead into a situation, in which multiple nodes declare themselves the new Coordinator. In the current implementation this could lead to both node continuously declaring themselves the new Coordinator to other nodes and to the node Director. In a MVP election process should be resilient and handle such scenarios. The optimal solution should be carefully researched, but as an initial thought the Director node could be used to detect a situation in which two or more nodes keep constantly updating states (resembling a livelock) and to intervene in some way. It is worth noting that in such scenario the Coordinators may have different lists of nodes and this should also be fixed. 
+
+> Side-note: it is possible to demonstrate this issue with the prototype by (a) disconnecting the Coordinator node, (b) waiting just long enough for the first election to start and (c) quickly bringing up the current Coordinator again. In this case a new Coordinator is elected but the current Coordinator get the old state from the Director and sets itself as the Coordinator (leading to two Coordinators)
+
+#### Naming conventions
+
+In the current implementation nodes response to an election request with a `vote`. This naming may lead to confusion as it can be interpreted to mean that the sender of `vote` is giving the other node their vote, when actually they are "giving" themselves the vote and the purpose of the response is to let the other node to know, that a higher id node is ready to become the Coordinator. To improve readability and maintainability naming conventions should be as clear as possible and this should be clarified. 
 
 ## Lessons learned
 
