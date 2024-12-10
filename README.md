@@ -11,26 +11,19 @@ Documents required for project evaluation
 
 ### System requirements 
 
-Running this application required version `x.x.x` of node.js and version `x.x.x` of npm. 
+For development of this application the following versions have been used:
+- node.js:`23.3.0` 
+- npm: `10.9.0`
+- docker-compose: `2.30.1` 
+- docker: `27.4.0`
+
+Older versions of these applications are not guaranteed to work.
 
 ### Installation
 
 Start by cloning the application from the default branch (main) of the GitHub -repository with `git clone`.
 
-The application has two modules: `director` and `node`. For each of these you need to install required dependencies. Alternatively, you can use Docker if you want to [test this locally](#running-with-docker).
-
-#### Node
-Move to the subdirectory `./node` and run the command 
-
-```bash
-npm install
-```
-
-To verify that everything is working correctly, run the unittests with 
-
-```bash
-npm test
-```
+The application has two modules: `director` and `node`. For each of these you need to install required dependencies. Alternatively, you can use Docker Compose if you want to [test this in containers](#running-with-docker).
 
 #### Director
 Move to the subdirectory `./director` and run the command 
@@ -44,6 +37,32 @@ To verify that everything is working correctly, run the unittests with
 ```bash
 npm test
 ```
+To start a node run the command:
+```bash
+npm start
+```
+
+#### Node
+
+Move to the subdirectory `./node` and run the command 
+
+```bash
+npm install
+```
+
+To verify that everything is working correctly, run the unittests with 
+
+```bash
+npm test
+```
+
+After the Director is running, to start a node run the command:
+
+```bash
+PORT=<xxxx> npm start
+```
+
+> The `PORT=<xxxx>` is optional, but lets you define a port for the node. This is useful when starting multiple nodes locally. 
 
 ### Local testing
 
@@ -68,7 +87,7 @@ In terminal windows you can follow the messages between nodes and the director. 
 
 #### Running with Docker
 
-Alternatively, you can run the application using Docker. This method simplifies the setup by containerizing the director and nodes.
+Alternatively, you can run the application using Docker (or Docker Compose). This method simplifies the setup by containerizing the director and nodes.
 
 Open separate terminal windows to start each service:
 ```
