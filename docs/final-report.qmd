@@ -228,6 +228,19 @@ The coordinator then responds with the discussion history (a list of message obj
     - **Vector Clock size**: Vector clocks grow in size as the number of nodes increases. This can lead to increased storage and communication overhead. Consider strategies to manage clock size, such as pruning old entries.
     - **Catch-up Optimization**: Sending the entire discussion array to new nodes can be inefficient if the chat history is very large. Consider optimizing the catch-up mechanism, perhaps by sending only a recent portion of the history.
 
+### Security
+
+Our prototype prioritizes secure communication. When connecting nodes, use **wss://** addresses for WebSocket connections and **https://** addresses for standard HTTP requests ensuring all data exchanged is encrypted using TLS. However, beyond this basic transport encryption, our initial prototype does not include additional security measures. In the MVP we will address this by incorporating the following security considerations:
+
+* **Input Sanization :**
+    - All user inputs should be sanitized by escaping or encoding characters that could potentially cause harm to the system. For example, by properly escaping the following characters, the risk of Cross-Site Scripting (XSS) attacks can be mitigated: `<, >, &, "`
+
+* **Integrity of messages** 
+    - TODO
+
+* **Additional note on security measures**
+    - When choosing the appropriate dependency for a certain use case, the necessary precautions should always be taken and it should be ensured that chosen dependencies are from trusted sources.
+
 {{< pagebreak >}}
 
 ### Language selection
