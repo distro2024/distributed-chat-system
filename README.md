@@ -139,4 +139,4 @@ The team should write code in a manner that supports unittesting of different fu
 
 ## Video demonstration of the system
 
-[Distibuted Chat System](https://helsinkifi-my.sharepoint.com/:v:/g/personal/vaisajuh_ad_helsinki_fi/EZwn-eFB-g5Ko_OXWVBGUS4BmKZBHP22L3Yw1NQCFuj6cw?e=sOnlBV&nav=eyJwbGF5YmFja09wdGlvbnMiOnt9LCJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJTdHJlYW1XZWJBcHAiLCJyZWZlcnJhbE1vZGUiOiJtaXMiLCJyZWZlcnJhbFZpZXciOiJwb3N0cm9sbC1jb3B5bGluayIsInJlZmVycmFsUGxheWJhY2tTZXNzaW9uSWQiOiI5NDdhNWQ1ZC1iOWYzLTRjYzMtOGQ0NS0wYTk0N2RmZjRmZGYifX0%3D)
+[Distibuted Chat System](https://youtu.be/6TNCDECRa38)
