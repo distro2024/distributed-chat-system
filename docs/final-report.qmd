@@ -17,13 +17,18 @@ format: gfm
 // THIS IS HOW A ToC IS DONE WITH MARKDOWN  
 - [Introduction](#introduction) 
 - [Techincal overview](#techical-overview)  
+  - [Nodes](#nodes-(aka-chat-nodes))
   - [Coordinator node](#coordinator-node)  
   - [Node director](#node-director)
+  - [Joining group discussion](#joining-group-discussion)
   - [Coordinator election](#coordinator-election)  
-  - ...
-- ...
+  - [Sending and receiving messages](#sending-and-receiving-messages)
+  - [Eventual Consistency in Discussion](#eventual-consistency-in-discussion)
+  - [Security](#security)
+- [From prototype to MVP](#from-prototype-to-mvp)
 - [Group participation](#group-participation)  
 - [Use of LLMs](#use-of-llms)  
+- [References](#references)
 
 {{< pagebreak >}}
 
@@ -62,17 +67,19 @@ Terminology:
 
 ### nodes (aka Chat-nodes)
 
-Each node participating in the discussion is a chat-node. Nodes have an identical structure and have an identical state
+Each node participating in the discussion is a chat-node. Nodes have an identical structure and should share an identical state of the discussion and of nodes in the network. 
 
 #### Node state 
 
-Each node stores information of all nodes in the network. For each node, the id of the node and an instance of `socket.io-client` is stored into the object. 
+Each node stores information of all nodes in the network. For each node, the id of the node, the node's address and an instance of `socket.io-client` is stored into the object. Additionally each node has a field lastHeartbeat, which is used by the Coordinator node (see section #[Coordinator node](#coordinator-node) for more details):
 
 ```json
 [
     {
-        "id": "uuid",
-        "address": "io(address)"
+        "nodeId": "uuid",
+        "nodeAddress": "URI",
+        "socket": "instance of socker.io-client object",
+        "lastHeartbeat": "timestamp"
     }
 ]
 ```
@@ -86,6 +93,8 @@ nodes.foreach(nodes) => {
     node.address.emit('path', body)
 }
 ```
+
+Each node should also share an identical state of the chat-discussion. This functionality is detailed in section #[Sending and receiving messages](#sending-and-receiving-messages)
 
 ### Coordinator node
 
@@ -196,11 +205,18 @@ The node with the highest id will not receive any vote requests, and determines 
 
 
 #### Communication with coordinator node  
-
+- [Joining group discussion](#joining-group-discussion)
 The coordinator node can send a message requesting other nodes to update the record of actives nodes in group discussion after nodes join or leave the discussion: POST `/nodes`
 ```json
 {
-    "node": ["uuid"]
+    "nodes": [
+        { 
+            "nodeId": "uuid",
+            "nodeAddress": "URI",
+            "socket": "instance of socker.io-client object",
+            "lastHeartbeat": "timestamp"
+        }
+    ]
 }
 ```
 
@@ -321,22 +337,19 @@ The current implementation is based on the assumptions presented by Garcia-Molin
 
 In the current implementation nodes response to an election request with a `vote`. This naming may lead to confusion as it can be interpreted to mean that the sender of `vote` is giving the other node their vote, when actually they are "giving" themselves the vote and the purpose of the response is to let the other node to know, that a higher id node is ready to become the Coordinator. To improve readability and maintainability naming conventions should be as clear as possible and this should be clarified. 
 
-## Lessons learned
-
-## Scaling
+### Scaling
 
 The system can be easily scaled by simply adding new nodes. Client communication and inter-node messaging are separated, which helps distribute the load efficiently.
+
+## Lessons learned
 
 ```
 FINAL REPORT INSTRUCTION
 6. The key enablers and the lessons learned during the development of the project.
 ```
 
-During the first two weeks of the project, the team has concentrated on research and planning. They have designed a preliminary architecture for the implementation and selected the technologies to be used. With these foundational steps completed, the project is now poised to enter the development phase. 
+Working on this small prototype gave the participants an opportunity to study hands-on some course concepts. The team had at least one meeting each week, during which we discussed the themes related both to the group project and to the course in general. During the process the team got a glimpse into the challenges that manifest when designing a Distributed System. The scope of this project was quite limited and a lot of constraints had to be placed on which functionalities to implement. As a team we are in consensus in considering our prototype to be a good and coherent demonstration of some key features that would exists in some form in an actual distributed chat system. In it's constrained scale the system is functional and provides selected core features required from a Distributed Chat System. 
 
-However, some critical details still need to be finalized. Specifically, the technical aspects of inter-node communication and synchronization are yet to be determined. These topics will be addressed in the lectures during weeks 3 and 4, after which the necessary design decisions will be made.
-
-In the meantime, the team can proceed by developing the chat nodes and the node director. This phased approach allows for continuous progress while awaiting further clarification on the remaining technical issues.
 
 {{< pagebreak >}}
 
