@@ -233,10 +233,36 @@ The coordinator then responds with the discussion history (a list of message obj
 Our prototype prioritizes secure communication. When connecting nodes, use **wss://** addresses for WebSocket connections and **https://** addresses for standard HTTP requests ensuring all data exchanged is encrypted using TLS. However, beyond this basic transport encryption, our initial prototype does not include additional security measures. In the MVP we will address this by incorporating the following security considerations:
 
 * **Input Sanization :**
-    - All user inputs should be sanitized by escaping or encoding characters that could potentially cause harm to the system. For example, by properly escaping the following characters, the risk of Cross-Site Scripting (XSS) attacks can be mitigated: `<, >, &, "`
+    - Input sanitization
+        - All user inputs should be sanitized by escaping or encoding characters that could potentially cause harm to the system. For example, by properly escaping the following characters, the risk of Cross-Site Scripting (XSS) attacks can be mitigated: `<, >, &, "`.
+    - Validation
+        - Enforce strict rules for data types, formats, and allowed values to prevent invalid data from causing issues or being exploited.
+
+* **User authentication**
+    - Despite the absence of user accounts in the current prototype, we recognize the critical importance of addressing user authentication early in the development process. We will address the following key aspects of user authentication:
+        - **Strong passwords**
+            - Enforce password complexity and potentially use password hashing.
+        - **Multi-factor authentication (MFA)**
+            - We will evaluate the feasibility of implementing MFA, such as OTP or authenticator apps, to provide an extra layer of security.
+        - **Session management**
+            - Secure session management practices will be implemented, including the use of secure cookies and session timeouts, to protect user accounts.
 
 * **Integrity of messages** 
-    - TODO
+    - To ensure message integrity, the MVP will incorporate measures to protect against tampering during transit and storage. The specific techniques for ensuring integrity are still under investigation and will be finalized during further development. We are currently evaluating several approaches to ensure message integrity, including:
+        - **Hashing algorithms (e.g., SHA-256)**
+            - Generate a unique hash of each message. This hash is sent along with the message. Upon receipt, the recipient independently calculates the hash of the message and compares it to the received hash. If they match, the message integrity is confirmed.
+        - **Digital signatures (public-key cryptography)**
+            -  The sender signs the message with their private key, and the recipient uses the sender's public key to verify the signature. This method ensures integrity, authentication, and non-repudiation. Examples include RSA and ECDSA.
+        - **Message Authentication Codes (MACs)**
+            - Use a shared secret key to generate a MAC, such as HMAC, for each message. The MAC is transmitted with the message, and the recipient, possessing the same secret key, can verify it, ensuring both integrity and authentication.
+
+* **Security Testing**
+    - To ensure the effectiveness of our security measures, we will conduct
+    regular security testing throughout the development process. This will include:
+        - **Penetration testing:** Simulating attacks to identify vulnerabilities.
+        - **Vulnerability scanning:** Using automated tools to detect known weaknesses.
+        - **Code reviews:** Manually inspecting code for security flaws
+            - Security testing will be integrated into our CI/CD pipeline to ensure that tests are run automatically with every code change.
 
 * **Additional note on security measures**
     - When choosing the appropriate dependency for a certain use case, the necessary precautions should always be taken and it should be ensured that chosen dependencies are from trusted sources.
