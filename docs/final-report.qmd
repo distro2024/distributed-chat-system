@@ -323,6 +323,10 @@ In the current implementation nodes response to an election request with a `vote
 
 ## Lessons learned
 
+## Scaling
+
+The system can be easily scaled by simply adding new nodes. Client communication and inter-node messaging are separated, which helps distribute the load efficiently.
+
 ```
 FINAL REPORT INSTRUCTION
 6. The key enablers and the lessons learned during the development of the project.
