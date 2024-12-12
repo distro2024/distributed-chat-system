@@ -154,6 +154,19 @@ Any node (i.e. chat-node) can send chat-messages to other nodes: POST `/message`
 }
 ```
 
+#### Communication structure
+The project utilizes the Socket.IO library to implement communication in both client-to-node and node-to-node scenarios. Additionally, the socket.io-client library is used for inter-node communication. This approach ensures real-time interaction.
+
+##### Client-to-node communication
+Clients (e.g., browsers) connect to the server via Socket.IO. When a client establishes a connection, the server listens for the connection event and receives a new socket connection.
+
+Messages are sent by the client to the server using the established socket connection and the `client_message` event. A new client retrieves the chat history from the server using the `discussion` event.
+
+##### Node-to-node communication
+Node-to-node communication is implemented in a separate Socket.IO namespace, /nodes. This separation isolates inter-node communication from client communication and helps minimize conflicts between client and node events.
+
+Nodes can send various messages to each other, such as `node_message`, `update_nodes`, `vote`, `update-coordinator`, and `election`.
+
 #### Election process  
 
 Messages related to the election process with the implementation of Bully-algorithm. The messages are represented here in JSON format for clarity. The actual prototype implementation can be reviewed in module `./node/sockets.js`:
