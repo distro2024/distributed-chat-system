@@ -159,10 +159,11 @@ Any node (i.e. chat-node) can send chat-messages to other nodes: POST `/message`
 ```json
 { 
     "id": "uuid",
-    "node-id": "uuid",
+    "nodeId": "uuid",
+    "nodeHost": "URI",
+    "vectorClock": { ["nodeId"]: "int" },
     "timestamp": "timestamp",
     "message": "string"
-    "vector-clock:" ["int"]
 }
 ```
 
@@ -232,10 +233,11 @@ The coordinator then responds with the discussion history (a list of message obj
     "messages": [
         { 
             "id": "uuid",
-            "node-id": "uuid",
+            "nodeId": "uuid",
+            "nodeHost": "URI",
+            "vectorClock": { ["nodeId"]: "int" },
             "timestamp": "timestamp",
             "message": "string"
-            "vector-clock:" ["int"]
         }
     ] 
 }
