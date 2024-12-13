@@ -332,7 +332,9 @@ The election process in the prototype is based on the well-established Bully alg
 
 #### Improving fault-tolerance  
 
-The current implementation is based on the assumptions presented by Garcia-Molina (1982). For instance, it is assumed that no messages are lost. In reality, messages can be lost and this could lead into a situation, in which multiple nodes declare themselves the new Coordinator. In the current implementation this could lead to both node continuously declaring themselves the new Coordinator to other nodes and to the node Director. In a MVP election process should be resilient and handle such scenarios. The optimal solution should be carefully researched, but as an initial thought the Director node could be used to detect a situation in which two or more nodes keep constantly updating states (resembling a livelock) and to intervene in some way. It is worth noting that in such scenario the Coordinators may have different lists of nodes and this should also be fixed. 
+The current implementation is based on the assumptions presented by Garcia-Molina (1982). For instance, it is assumed that no messages are lost. In reality, messages can be lost and this could lead into a situation, in which multiple nodes declare themselves the new Coordinator. In the current implementation this could lead to both node continuously declaring themselves the new Coordinator to other nodes and to the node Director. In a MVP election process should be resilient and handle such scenarios. 
+
+The optimal solution should be carefully researched, but as an initial thought the Director node could be used to detect a situation in which two or more nodes keep constantly updating states (resembling a livelock) and to intervene in some way. It is worth noting that in such scenario the Coordinators may have different lists of nodes and this should also be fixed. 
 
 > Side-note: it is possible to demonstrate this issue with the prototype by (a) disconnecting the Coordinator node, (b) waiting just long enough for the first election to start and (c) quickly bringing up the current Coordinator again. In this case a new Coordinator is elected but the current Coordinator get the old state from the Director and sets itself as the Coordinator (leading to two Coordinators)
 
@@ -344,17 +346,14 @@ In the current implementation nodes response to an election request with a `vote
 
 The system can be easily scaled by simply adding new nodes. Client communication and inter-node messaging are separated, which helps distribute the load efficiently.
 
+{{< pagebreak >}}
+
 ## Lessons learned
 
-```
-FINAL REPORT INSTRUCTION
-6. The key enablers and the lessons learned during the development of the project.
-```
+Working on this small prototype gave the participants an opportunity to study hands-on some course concepts. The team had at least one meeting each week, during which we discussed the themes related both to the group project and to the course in general. During the process the team got a glimpse into the challenges that manifest when designing a Distributed System.  
 
-Working on this small prototype gave the participants an opportunity to study hands-on some course concepts. The team had at least one meeting each week, during which we discussed the themes related both to the group project and to the course in general. During the process the team got a glimpse into the challenges that manifest when designing a Distributed System. The scope of this project was quite limited and a lot of constraints had to be placed on which functionalities to implement. As a team we are in consensus in considering our prototype to be a good and coherent demonstration of some key features that would exists in some form in an actual distributed chat system. In it's constrained scale the system is functional and provides selected core features required from a Distributed Chat System. 
+The scope of this project was quite limited and a lot of constraints had to be placed on which functionalities to implement. As a team we are in consensus in considering our prototype to be a good and coherent demonstration of some key features that would exists in some form in an actual distributed chat system. In it's constrained scale the system is functional and provides selected core features required from a Distributed Chat System. 
 
-
-{{< pagebreak >}}
 
 ## Group participation
 
@@ -370,8 +369,6 @@ FINAL REPORT INSTRUCTION
   - pair coding etc. 
 
 The team maintains active communication through a group discussion on Telegram. Each weekend, they hold an online call to plan the upcoming week and discuss any current issues. Work items are coordinated using a Kanban-style project board on GitHub, where tasks are tracked as issues. This approach helps the team better estimate workloads, coordinate active tasks, and plan the project's timeline effectively.
-
-{{< pagebreak >}}
 
 ## Use of LLMs 
 
