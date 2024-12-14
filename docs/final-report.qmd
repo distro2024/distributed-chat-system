@@ -327,6 +327,14 @@ FINAL REPORT INSTRUCTION
 7. Notes about the group members and their participation, work task division, etc. Here you also may report, if you feel that the points collected to group should be split unevenly among group members. Use percentages when descripting this balancing view point. 
 ```
 
+### Messaging and fault tolerance
+
+In the prototype messaging is kept simple to purely demonstrate some key features of a Distributed Chat System. For instance, heartbeats are sent as HTTP-requests without fine-grained response handling. In a MVP the exception handling should have a higher maturity level and if HTTP requests and responses are used for some communication, the status codes of the responses should be also verified. 
+
+
+### Optimization of data structures
+
+In the prototype each node stores information on nodes in the network in an array. It should be considered, whether some other data structure would be more efficient. For instance, after Zombie hunt the Coordinator node iterates through the whole array to find and remove unresponsive nodes. It should be considered whether other data structures, such as map, could provide better time and space complexity results. 
 
 ### Election process
 
