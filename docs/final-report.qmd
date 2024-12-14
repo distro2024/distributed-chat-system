@@ -17,7 +17,7 @@ format: gfm
 // THIS IS HOW A ToC IS DONE WITH MARKDOWN  
 - [Introduction](#introduction) 
 - [Techincal overview](#techical-overview)  
-  - [Nodes](#nodes-(aka-chat-nodes))
+  - [Nodes](#nodes-also-known-as-chat-nodes)
   - [Coordinator node](#coordinator-node)  
   - [Node director](#node-director)
   - [Joining group discussion](#joining-group-discussion)
@@ -66,15 +66,15 @@ Terminology:
 - **node:** chat-node sends and receives messages from other chat-nodes. Chat-node can also serve as a coordinator for other chat-nodes (detailed later in the document)
 - **node director:** node director connects new chat-nodes into the group discussion. Node director does not participate in chat discussion, but communicates with the coordinator node (detailed later in the document)
 
-![Basic case](./img/basic_case.png)
+![Basic case](./img/basic_case.png){#fig-basecase}
 
-### nodes (aka Chat-nodes)
+### Nodes, also known as Chat nodes
 
 Each node participating in the discussion is a chat-node. Nodes have an identical structure and should share an identical state of the discussion and of nodes in the network. 
 
 #### Node state 
 
-Each node stores information of all nodes in the network. For each node, the id of the node, the node's address and an instance of `socket.io-client` is stored into the object. Additionally each node has a field lastHeartbeat, which is used by the Coordinator node (see section #[Coordinator node](#coordinator-node) for more details):
+Each node stores information of all nodes in the network. For each node, the id of the node, the node's address and an instance of `socket.io-client` is stored into the object. Additionally each node has a field lastHeartbeat, which is used by the Coordinator node (see section [Coordinator node](#coordinator-node) for more details):
 
 ```json
 [
@@ -97,34 +97,89 @@ nodes.foreach(nodes) => {
 }
 ```
 
-Each node should also share an identical state of the chat-discussion. This functionality is detailed in section #[Sending and receiving messages](#sending-and-receiving-messages)
+Each node should also share an identical state of the chat-discussion. This functionality is detailed in section [Sending and receiving messages](#sending-and-receiving-messages)
 
 ### Coordinator node
 
-Mechanisms will be in place to handle situations where nodes join or leave the discussion and to resolve any discrepancies in discussion histories among nodes. The team has chosen to implement a coordinator role and an election process initially based on the bully algorithm. The elected coordinator has several duties. It:
+The coordinator node is an elected role responsible for onboarding new nodes into the chat and maintaining an up-to-date record of the nodes participating in the discussion. During the onboarding process, the new chat node receives a list of its neighbours and the existing chat history. This list of neighbours is updated and sent to all chat nodes whenever a new node joins the chat. Each chat always has one coordinator node, and if the current coordinator fails, the remaining nodes initiate an election process to select a new one. Thus, any node is eligible to become the coordinator at any point during the chat. See [coordinator election](#coordinator-election) section for more spesific details of the election.
 
-- Maintains an up-to-date record of nodes in the discussion.
-- Assists new nodes in joining the discussion by providing them with a replica of the current state of the group discussion and the addresses of all nodes in the discussion.
-- Keeps in contact with the node director to ensure the node director is aware of the current coordinator node and performs health checks on the node director.  
+The coordinator node sends heartbeats to the director node, allowing the director to identify the current coordinator for each chat and to direct new nodes to the appropriate chat. Similarly, chat nodes send heartbeats to the coordinator node, enabling it to monitor which nodes are active and participating in the chat. If the coordinator does not receive a heartbeat from a node, it runs a regular task to identify and remove potential zombie nodes from the list.
+
+The coordinator node has two endpoints:
+
+POST `/onboard_node`: Handles the onboarding of a new node into the chat by providing the list of neighbours and the chat history to the joining node. The payload structures are:
+
+```json
+{
+    "nodeId": "uuid",
+    "nodeAddress": "URI"
+}
+```
+
+for a request and
+
+```json
+{
+    "neighbours": [
+        {
+            "nodeId": "uuid",
+            "nodeAddress": "URI"
+        }
+    ],
+    "discussion": [
+        {
+            "id": "uuid",
+            "nodeId": "uuid",
+            "nodeHost": "URI",
+            "vectorClock": { ["nodeId"]: "int" },
+            "timestamp": "timestamp",
+            "message": "string"
+        }
+    ]
+}
+```
+
+for a response.
+
+POST `/heartbeat`: Handles incoming heartbeats from chat nodes. The request payload structure is:
+
+```json
+{
+    "nodeId": "uuid",
+}
+```
+
+and the response is only a status code “200”.
+
 
 ### Node director
-The Node Director has two primary functions: it directs clients to the current coordinator's server and keeps information about the coordinator. When a client connects to the director, they are redirected to the coordinator’s server. To ensure continuity, the coordinator notifies the director of its presence every few seconds, allowing the director to stay up-to-date on the current coordinator. To support these functions, the director provides three endpoints:
 
-`GET /` Redirects the client to the current coordinator's server.  
-`POST /register_coordinator` The node director receives the coordinator's ID, internal address and public address.  
-`POST /register_node` The node director receives a new node's ID, internal address and public address, then forwards this information to the coordinator.  
+The director node is a separate node (see @fig-basecase) whose main role is to manage node discovery. The director node has a known name or address, which is provided to chat nodes as a starting parameter. It offers two endpoints:
+
+POST `/join_chat`: Handles requests to join the chat. Both the request and response payloads have the following structure:
+
+```json
+{
+    "nodeId": "uuid",
+    "nodeAddress": "URI"
+}
+```
+
+In the request payload, the nodeId and nodeAddress represent the joining chat node's ID and address. In the response payload, these fields represent the current coordinator's ID and address. If the joining chat node is the first node in the chat, the response payload contains its own details.
+
+POST `/update_coordinator`: Updates the information about the current coordinator in the chat. Both the request and response payloads follow the same structure as above.
 
 {{< pagebreak >}}
 
 ### Joining group discussion
 
-When a new node wants to join the chat, it connects first to the Node Director with a known name. The Node Director directs it to a coordinator node, which gives two neighbour nodes to exchange messages with. Now the new node is ready for multicasting new messages to its neighbours and to receive messages from them.
+When a new node wants to join the chat, it connects first to the Node Director with a known name/address. The Node Director directs it to a coordinator node, which gives neighbour nodes and the existing chat history. Now the node is part of the chat.
 
 ```{mermaid}
 flowchart TD
     A[Node X] --> |wants to join the chat, calls to Node Director| B[Node Director]
     B --> |directs the new node to Coordinator node| C[Coordinator node]
-    C --> |gives neighbours to NodeX| D[Now Node X is a part of the chat]
+    C --> |gives neighbours and chat history to NodeX| D[Now Node X is a part of the chat]
 ```
 
 {{< pagebreak >}}
@@ -157,7 +212,7 @@ The team has outlined the necessary messages for the system currently under desi
 
 Any node (i.e. chat-node) can send chat-messages to other nodes: POST `/message`
 ```json
-{ 
+{
     "id": "uuid",
     "nodeId": "uuid",
     "nodeHost": "URI",
@@ -204,42 +259,6 @@ The node with the highest id will not receive any vote requests, and determines 
 ```json
 {
     "nodeId": "uuid"
-}
-```
-
-
-#### Communication with coordinator node  
-- [Joining group discussion](#joining-group-discussion)
-The coordinator node can send a message requesting other nodes to update the record of actives nodes in group discussion after nodes join or leave the discussion: POST `/nodes`
-```json
-{
-    "nodes": [
-        { 
-            "nodeId": "uuid",
-            "nodeAddress": "URI",
-            "socket": "instance of socker.io-client object",
-            "lastHeartbeat": "timestamp"
-        }
-    ]
-}
-```
-
-Any node can get the discussion history from coordinator node: GET `/discussion`
-
-The coordinator then responds with the discussion history (a list of message objects): POST `/discussion`
-
-```json
-{
-    "messages": [
-        { 
-            "id": "uuid",
-            "nodeId": "uuid",
-            "nodeHost": "URI",
-            "vectorClock": { ["nodeId"]: "int" },
-            "timestamp": "timestamp",
-            "message": "string"
-        }
-    ] 
 }
 ```
 
@@ -347,6 +366,8 @@ The current implementation is based on the assumptions presented by Garcia-Molin
 The optimal solution should be carefully researched, but as an initial thought the Director node could be used to detect a situation in which two or more nodes keep constantly updating states (resembling a livelock) and to intervene in some way. It is worth noting that in such scenario the Coordinators may have different lists of nodes and this should also be fixed. 
 
 > Side-note: it is possible to demonstrate this issue with the prototype by (a) disconnecting the Coordinator node, (b) waiting just long enough for the first election to start and (c) quickly bringing up the current Coordinator again. In this case a new Coordinator is elected but the current Coordinator get the old state from the Director and sets itself as the Coordinator (leading to two Coordinators)
+
+In the current implementation, there is only one Director node. Therefore, if it fails, new nodes cannot join the chat. To improve fault tolerance, the Director could be modified to store information about chats and their coordinators in a more persistent and centralized manner. This would allow for a pool of Director nodes, with an election process among them to select one responsible for listening to the known name or address for connections.
 
 #### Naming conventions
 
