@@ -348,6 +348,10 @@ In the current implementation nodes response to an election request with a `vote
 
 The system can be easily scaled by simply adding new nodes. Client communication and inter-node messaging are separated, which helps distribute the load efficiently.
 
+###  Potential applications of the project 
+
+This project provides a foundation for building diverse applications that demand real-time communication capabilities. Its potential extends to social media platforms, collaborative tools, and specialized services like emergency response and IoT systems—any application where speed, scale, and reliability in messaging are critical can leverage this technology.
+
 {{< pagebreak >}}
 
 ## Lessons learned
