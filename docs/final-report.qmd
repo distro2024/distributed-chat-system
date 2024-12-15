@@ -51,11 +51,12 @@ The purpose of this project is to research distributed chat systems and to imple
 The justification for such an implementation is that in today's world, we all live with an ever-growing digital footprint. At the same time, many of us have a need for private communication. Most social media services maintain communication history, making it difficult to clear previous discussions. This project introduces an approach in which each discussion is transient by default, promoting a new type of real-time, text-based communication.
 
 The prototype implements the following key functionalities:
-- a single chat room for group discussion
-- node discovery through a central director node
-- eventually consistent chat messaging
-- coordinator election with tailored implementation of Bully algorithm
-- coordinator tasks to onboard new nodes and to keep the list of active nodes up to date
+
+- a single chat room for group discussion  
+- node discovery through a central director node  
+- eventually consistent chat messaging  
+- coordinator election with tailored implementation of Bully algorithm  
+- coordinator tasks to onboard new nodes and to keep the list of active nodes up to date  
 
 This report first reviews the functionalities implemented in the prototype. After this, some key steps to needed to proceed from a prototype to an MVP (minimum viable product) are discussed. The report concludes with lessons learned, reflections on group participation, a description of how LLMs (large language models) were used during the project and a short reference list. 
 
