@@ -48,11 +48,6 @@ numbersections: true
 
 # Introduction
 
-```
-FROM FINAL REPORT INSTRUCTION:
-1. The project’s goal(s) and core functionality. Identifying the applications / services that can build on your project. 
-```
-
 The purpose of this project is to research distributed chat systems and to implement a working prototype. As a novel approach, this system does not contain persistent storage. Instead, chat discussions are transient, like phone calls, and remain active only until all nodes leave the communication. At that point, the discussion is gone and cannot be retrieved.
 
 The justification for such an implementation is that in today's world, we all live with an ever-growing digital footprint. At the same time, many of us have a need for private communication. Most social media services maintain communication history, making it difficult to clear previous discussions. This project introduces an approach in which each discussion is transient by default, promoting a new type of real-time, text-based communication.
@@ -65,6 +60,8 @@ The prototype implements the following key functionalities:
 - coordinator tasks to onboard new nodes and to keep the list of active nodes up to date
 
 This report first reviews the functionalities implemented in the prototype. After this, some key steps to needed to proceed from a prototype to an MVP (minimum viable product) are discussed. The report concludes with lessons learned, reflections on group participation, a description of how LLMs (large language models) were used during the project and a short reference list. 
+
+The project's remote repository (with source code and documentation) can be found at Github: [https://github.com/distro2024/distributed-chat-system](https://github.com/distro2024/distributed-chat-system)  
 
 {{< pagebreak >}}
 
