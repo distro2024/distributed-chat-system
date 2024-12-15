@@ -360,7 +360,7 @@ This project provides a foundation for building diverse applications that demand
 
 ### Scaling
 
-The system can be easily scaled by simply adding new nodes. Client communication and inter-node messaging are separated, which helps distribute the load efficiently.
+The system can be easily scaled by simply adding new nodes. Client communication and inter-node messaging are separated, which helps distribute the load efficiently.  
 
 ### Transparency considerations
 
@@ -394,6 +394,14 @@ The optimal solution should be carefully researched, but as an initial thought t
 
 In the current implementation, there is only one Director node. Therefore, if it fails, new nodes cannot join the chat. To improve fault tolerance, the Director could be modified to store information about chats and their coordinators in a more persistent and centralized manner. This would allow for a pool of Director nodes, with an election process among them to select one responsible for listening to the known name or address for connections.
 
+
+### Benchmarking 
+
+The report outlines, that simple messaging was used to demonstrate key features of a Distributed Chat System. For example, heartbeats were sent as HTTP requests without fine-grained response handling. Neither the communication with web sockets or with HTTP was benchmarked. For a Minimum Viable Product (MVP), a more mature level of communication exception handling and verificatoin is necessary. To achieve this, benchmarking is essential for an MVP to evaluate performance and optimize key parameters.  
+
+The heartbeat frequencies and coordinator task frequencies, such as the frequency of removing zombie nodes, should also be benchmarked and optimized. Benchmarking will play a crucial role in determining the optimal frequencies for these tasks.  
+
+By systematically testing different frequency values and measuring their impact on system performance, developers can identify the settings that strike the best balance between responsiveness, resource consumption, and fault tolerance. Without benchmarking, arbitrarily set values might lead to either excessive overhead from frequent tasks or delayed responses due to infrequent checks, or failures due to unsufficient exception handling and verification.  
 
 {{< pagebreak >}}
 
