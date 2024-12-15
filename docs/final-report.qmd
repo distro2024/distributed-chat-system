@@ -1,19 +1,21 @@
 ---
-title: "Distributed Chat System"
+title: "Distributed Chat System - final report"
 format: gfm
+header-includes:
+  - \usepackage{caption}
+  - \captionsetup[figure]{font=scriptsize}  # This sets the font size for figure captions.
+numbersections: true
 ---
-
-# Distributed Chat Systems - Final Report
 
 **Course:** CSM13001 Distributed Systems, University of Helsinki  
 **Members:** Juha Väisänen, Pekka Prökkinen, Ville Hänninen, Heidi Holappa  
 **Group number:** 9  
 
-// MAYBE A PICTURE HERE? 
+![Image of the Distributed Chat System with a Node Director, a Coordinator, and Chat Nodes. A new Chat Node is contacting the Director to join the network and the Node Director is passing its information to the Coordinator. The Coordinator is sending a heartbeat to the Node Director. Chat Nodes are sending a heartbeat to the Coordinator. One Chat Node is sending a new chat message to other Chat Nodes.](./img/cover-image.jpg)
 
 {{< pagebreak >}}
 
-## Table of Contents 
+**Table of Contents**
 
 1. [Introduction](#introduction)
 2. [Techincal overview](#techical-overview)
@@ -27,8 +29,9 @@ format: gfm
     viii. [Eventual Consistency in Discussion](#eventual-consistency-in-discussion)
     ix. [Security](#security)
 3. [From prototype to MVP](#from-prototype-to-mvp)
-    i. [Election process](#election-process)
+    i. [Potential applications of the project](#potential-applications-of-the-project)
     ii. [Scaling](#scaling)
+    i. [Election process](#election-process)
 4. [Lessons learned](#lessons-learned)
 5. [Group participation](#group-participation)
 6. [Use of LLMs](#use-of-llms)
@@ -38,7 +41,7 @@ format: gfm
 
 // MAYBE NEW PAGE FOR ALL LEVEL TWO (##) SECTIONS?
 
-## 1. Introduction
+# Introduction
 
 ```
 FROM FINAL REPORT INSTRUCTION:
@@ -60,7 +63,7 @@ This report first reviews the functionalities implemented in the prototype. Afte
 
 {{< pagebreak >}}
 
-## 2. Techical overview
+# Techical overview
 
 The system under design provides a chat application for end users. When users launch the application to initiate a chat discussion, the client application becomes one of the **chat-nodes** (later nodes) in the distributed chat system. The system includes a **node director** responsible for connecting nodes to each other. In this proof-of-concept version all nodes participate in the same discussion.
 
@@ -70,7 +73,7 @@ Terminology:
 
 ![Basic case](./img/basic_case.png){#fig-basecase}
 
-### System architecture
+## System architecture
 
 The architecture of this Distributed Chat System is centered around a network of nodes, each representing a client participating in the discussion. These nodes communicate directly with each other, forming a decentralized and fault-tolerant approach. One key component is the coordinator node, responsible for onboarding new nodes, maintaining an up-to-date list of active nodes. The system also incorporates a director node, which acts as a central point for node discovery, connecting new nodes with the current coordinator node. This architecture prioritizes providing users an experience of real-time interaction, employing websockets for node-to-node communication. The system is designed to be transient, meaning that chat discussions are not persistently stored and disappear when all nodes leave the communication. 
 
@@ -81,11 +84,11 @@ The prototype provides distributed system transparency on some key areas (Steen 
 - **node failure and system recovery:** the system is designed to handle node failure gracefully. If required, an election to choose a new coordinator. Additionally the coordiantor removes unresponsive nodes from the discussion. 
 
 
-### Nodes
+## Nodes
 
 Each node (aka chat-node) participating in the discussion is a chat-node. Nodes have an identical structure and should share an identical state of the discussion and of nodes in the network. 
 
-#### Node state 
+### Node state 
 
 Each node stores information of all nodes in the network. For each node, the id of the node, the node's address and an instance of `socket.io-client` is stored into the object. Additionally each node has a field lastHeartbeat, which is used by the Coordinator node (see section [Coordinator node](#coordinator-node) for more details):
 
@@ -112,7 +115,7 @@ nodes.foreach(nodes) => {
 
 Each node should also share an identical state of the chat-discussion. This functionality is detailed in section [Sending and receiving messages](#sending-and-receiving-messages)
 
-### Coordinator node
+## Coordinator node
 
 The coordinator node is an elected role responsible for onboarding new nodes into the chat and maintaining an up-to-date record of the nodes participating in the discussion. During the onboarding process, the new chat node receives a list of its neighbours and the existing chat history. This list of neighbours is updated and sent to all chat nodes whenever a new node joins the chat. Each chat always has one coordinator node, and if the current coordinator fails, the remaining nodes initiate an election process to select a new one. Thus, any node is eligible to become the coordinator at any point during the chat. See [coordinator election](#coordinator-election) section for more spesific details of the election.
 
@@ -165,7 +168,7 @@ POST `/heartbeat`: Handles incoming heartbeats from chat nodes. The request payl
 and the response is only a status code “200”.
 
 
-### Node director
+## Node director
 
 The director node is a separate node (see @fig-basecase) whose main role is to manage node discovery. The director node has a known name or address, which is provided to chat nodes as a starting parameter. It offers two endpoints:
 
@@ -184,7 +187,7 @@ POST `/update_coordinator`: Updates the information about the current coordinato
 
 {{< pagebreak >}}
 
-### Joining group discussion
+## Joining group discussion
 
 When a new node wants to join the chat, it connects first to the Node Director with a known name/address. The Node Director directs it to a coordinator node, which gives neighbour nodes and the existing chat history. Now the node is part of the chat.
 
@@ -197,7 +200,7 @@ flowchart TD
 
 {{< pagebreak >}}
 
-### Coordinator election
+## Coordinator election
 
 > This subsection contains references to the prototype module ./node/election.js. Each referenced method can be found in this module. 
 
@@ -213,13 +216,13 @@ Upon receiving an election request, each node initiates its own elections and se
 
 
 
-### Sending and receiving messages
+## Sending and receiving messages
 
 The nodes will send chat messages to all other nodes in the group discussion. The team will investigate a mechanism for transferring chat messages to each other efficiently. The idea is to simulate multicast functionality that works also when the nodes are in different networks. As a starting point, the team investigates using websockets or HTTP/2-protocol for inter-node communication. As communication between nodes is direct node-to-node discussion, no middleware is required in this proof-of-concept phase.  
 
 The team has outlined the necessary messages for the system currently under design. While the communication technology and protocol are still being evaluated, the final format of these messages has not yet been determined. For clarity and readability, the proposed message content is presented in JSON format. Regardless of the chosen technology, these examples will illustrate the intended structure and content.
 
-#### Chat messages  
+### Chat messages  
 
 Any node (i.e. chat-node) can send chat-messages to other nodes: POST `/message`
 ```json
@@ -233,20 +236,20 @@ Any node (i.e. chat-node) can send chat-messages to other nodes: POST `/message`
 }
 ```
 
-#### Communication structure
+### Communication structure
 The project utilizes the Socket.IO library to implement communication in both client-to-node and node-to-node scenarios. Additionally, the socket.io-client library is used for inter-node communication. This approach ensures real-time interaction.
 
-##### Client-to-node communication
+**Client-to-node communication**
 Clients (e.g., browsers) connect to the server via Socket.IO. When a client establishes a connection, the server listens for the connection event and receives a new socket connection.
 
 Messages are sent by the client to the server using the established socket connection and the `client_message` event. A new client retrieves the chat history from the server using the `discussion` event.
 
-##### Node-to-node communication
+**Node-to-node communication**
 Node-to-node communication is implemented in a separate Socket.IO namespace, /nodes. This separation isolates inter-node communication from client communication and helps minimize conflicts between client and node events.
 
 Nodes can send various messages to each other, such as `node_message`, `update_nodes`, `vote`, `update-coordinator`, and `election`.
 
-#### Election process  
+### Election process  
 
 Messages related to the election process with the implementation of Bully-algorithm. The messages are represented here in JSON format for clarity. The actual prototype implementation can be reviewed in module `./node/sockets.js`:
 
@@ -272,7 +275,7 @@ The node with the highest id will not receive any vote requests, and determines 
 }
 ```
 
-### Eventual Consistency in discussion 
+## Eventual Consistency in discussion 
 
 * **Direct Communication:** Nodes communicate directly with each other, reducing reliance on a single point of failure.
 
@@ -291,7 +294,7 @@ The node with the highest id will not receive any vote requests, and determines 
     - **Vector Clock size**: Vector clocks grow in size as the number of nodes increases. This can lead to increased storage and communication overhead. Consider strategies to manage clock size, such as pruning old entries.
     - **Catch-up Optimization**: Sending the entire discussion array to new nodes can be inefficient if the chat history is very large. Consider optimizing the catch-up mechanism, perhaps by sending only a recent portion of the history.
 
-### Security
+## Security
 
 Our prototype prioritizes secure communication. When connecting nodes, use **wss://** addresses for WebSocket connections and **https://** addresses for standard HTTP requests ensuring all data exchanged is encrypted using TLS. However, beyond this basic transport encryption, our initial prototype does not include additional security measures. In the MVP we will address this by incorporating the following security considerations:
 
@@ -330,21 +333,21 @@ Our prototype prioritizes secure communication. When connecting nodes, use **wss
 * **Additional note on security measures**
     - When choosing the appropriate dependency for a certain use case, the necessary precautions should always be taken and it should be ensured that chosen dependencies are from trusted sources.
 
-### Language selection
+## Language selection
 
 The chat nodes and the node director have been implemented using Node.js. Node.js has a strong reputation in handling asynchronous calls, which the team considers to be a critical functionality for the system under design. 
 
-### No persistent storage
+## No persistent storage
 
 As the motivation is to built a system for group discussions without any persistent memory, no database is necessary for this prototype proof-of-concept (PoC). Once all client applications shut down, the discussion is permanently lost.
 
-### Container technology
+## Container technology
 
 All nodes may also reside within containers, which may or may not be located on the same physical machine. This containerized approach ensures flexibility, scalability, and ease of deployment across different environments. The protype provides a demonstration of Docker compose implementation. The system can also be used without containers. For instructions, review the README.md. 
 
 {{< pagebreak >}}
 
-## 3. From prototype to MVP
+# 3. From prototype to MVP
 
 ```
 FINAL REPORT INSTRUCTION
@@ -352,35 +355,37 @@ FINAL REPORT INSTRUCTION
 5. How do you quantify the performance of the system and what did you do (can do) to improve the performance of the system (for instance reduce the latency or improve the throughput)?
 ```
 
-###  Potential applications of the project 
+##  Potential applications of the project 
 
 This project provides a foundation for building diverse applications that demand real-time communication capabilities. Its potential extends to social media platforms, collaborative tools, and specialized services like emergency response and IoT systems—any application where speed, scale, and reliability in messaging are critical can leverage this technology.
 
-### Scaling
+## Scaling
 
 The system can be easily scaled by simply adding new nodes. Client communication and inter-node messaging are separated, which helps distribute the load efficiently.  
 
-### Transparency considerations
+## Transparency considerations
 
-In an MVP Chat system closer attention should be placed on system transparency. For instance, it would be beneficial to provide the end-users the option to be aware of when a node joins or exits the discussion. Currently this is hidden from the user. Additionally, it should be  considered whether the user should be notified of missing chat messages. The system guarantees eventually consistent ordered chat message history and is aware when messages are missing. In the prototype this is hidden from the user. As the system grows from a prototype to an MVP, the transparency should be reviewed in a large perspective. As new functionalities are introduced, new considerations for transparency will also arise. 
+In an MVP Chat system closer attention should be placed on system transparency. For instance, it would be beneficial to provide the end-users the option to be aware of when a node joins or exits the discussion. Currently this is hidden from the user. Additionally, it should be  considered whether the user should be notified of missing chat messages.  
 
-### Optimization of data structures
+The system guarantees eventually consistent ordered chat message history and is aware when messages are missing. In the prototype this is hidden from the user. As the system grows from a prototype to an MVP, the transparency should be reviewed in a large perspective. As new functionalities are introduced, new considerations for transparency will also arise. 
+
+## Optimization of data structures
 
 In the prototype each node stores information on nodes in the network in an array. It should be considered, whether some other data structure would be more efficient. For instance, after Zombie hunt the Coordinator node iterates through the whole array to find and remove unresponsive nodes. It should be considered whether other data structures, such as map, could provide better time and space complexity results. 
 
-### Election process
+## Election process
 
 The election process in the prototype is based on the well-established Bully algorithm and took additionally loosely some inspiration from the Raft-algorithm (heartbeats, randomized time-intervals for sending heartbeats). In an MVP the implementation should be refined and fault-tolerance should be improved. Also naming conventions should be reconsidered. 
 
 In the current implementation nodes response to an election request with a `vote`. This naming may lead to confusion as it can be interpreted to mean that the sender of `vote` is giving the other node their vote, when actually they are "giving" themselves the vote and the purpose of the response is to let the other node to know, that a higher id node is ready to become the Coordinator. To improve readability and maintainability naming conventions should be as clear as possible and this should be clarified. 
 
-### Improving fault tolerance
+## Improving fault tolerance
 
-#### Messaging
+### Messaging
 
 In the prototype messaging is kept simple to purely demonstrate some key features of a Distributed Chat System. For instance, heartbeats are sent as HTTP-requests without fine-grained response handling. In an MVP the exception handling should have a higher maturity level and if HTTP requests and responses are used for some communication, the status codes of the responses should be also verified. 
 
-#### Election process
+### Election process
 
 The current implementation is based on the assumptions presented by Garcia-Molina (1982). For instance, it is assumed that no messages are lost. In reality, messages can be lost and this could lead into a situation, in which multiple nodes declare themselves the new Coordinator. In the current implementation this could lead to multiple nodes continuously declaring themselves the new Coordinator to other nodes and to the node Director. In an MVP election process should be resilient and handle such scenarios. 
 
@@ -388,12 +393,12 @@ The optimal solution should be carefully researched, but as an initial thought t
 
 > Side-note: it is possible to demonstrate this issue with the prototype by (a) disconnecting the Coordinator node, (b) waiting just long enough for the first election to start and (c) quickly bringing up the current Coordinator again. In this case a new Coordinator is elected but the current Coordinator get the old state from the Director and sets itself as the Coordinator (leading to two Coordinators)
 
-#### Director node
+### Director node
 
 In the current implementation, there is only one Director node. Therefore, if it fails, new nodes cannot join the chat. To improve fault tolerance, the Director could be modified to store information about chats and their coordinators in a more persistent and centralized manner. This would allow for a pool of Director nodes, with an election process among them to select one responsible for listening to the known name or address for connections.
 
 
-### Benchmarking 
+## Benchmarking 
 
 The report outlines, that simple messaging was used to demonstrate key features of a Distributed Chat System. For example, heartbeats were sent as HTTP requests without fine-grained response handling. Neither the communication with web sockets or with HTTP was benchmarked. For a Minimum Viable Product (MVP), a more mature level of communication exception handling and verificatoin is necessary. To achieve this, benchmarking is essential for an MVP to evaluate performance and optimize key parameters.  
 
@@ -403,14 +408,13 @@ By systematically testing different frequency values and measuring their impact 
 
 {{< pagebreak >}}
 
-## 4. Lessons learned
+# 4. Lessons learned
 
 Working on this small prototype gave the participants an opportunity to study hands-on some course concepts. The team had at least one meeting each week, during which we discussed the themes related both to the group project and to the course in general. During the process the team got a glimpse into the challenges that manifest when designing a Distributed System.  
 
 The scope of this project was quite limited and a lot of constraints had to be placed on which functionalities to implement. As a team we are in consensus in considering our prototype to be a good and coherent demonstration of some key features that would exists in some form in an actual distributed chat system. In it's constrained scale the system is functional and provides selected core features required from a Distributed Chat System. 
 
-
-## 5. Group participation
+# 5. Group participation
 
 ```
 FINAL REPORT INSTRUCTION
@@ -425,14 +429,14 @@ FINAL REPORT INSTRUCTION
 
 The team maintains active communication through a group discussion on Telegram. Each weekend, they hold an online call to plan the upcoming week and discuss any current issues. Work items are coordinated using a Kanban-style project board on GitHub, where tasks are tracked as issues. This approach helps the team better estimate workloads, coordinate active tasks, and plan the project's timeline effectively.
 
-## 6. Use of LLMs 
+# 6. Use of LLMs 
 
 University of Helsinki Large Language Model Curre, Microsoft Co-pilot and Chat-GPT have been used to help improve the grammar of the documentation and to polish the text. Separate LLMs have been prompted to provide feedback on text and to suggest improvements. The response has then been evaualuated and with consideration applied to improve the text. 
 
 
 {{< pagebreak >}}
 
-## 7. References
+# 7. References
 
 Garcia-Molina H. 1982. Elections in a Distributed Computing System. IEEE Transactions on Computers, 31(1):48–59, Jan. 1982.
 
