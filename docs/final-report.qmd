@@ -342,8 +342,6 @@ All nodes will reside within containers, which may or may not be located on the 
 FINAL REPORT INSTRUCTION
 4. How do you show that your system can scale to support the increased number of nodes?
 5. How do you quantify the performance of the system and what did you do (can do) to improve the performance of the system (for instance reduce the latency or improve the throughput)?
-6. The key enablers and the lessons learned during the development of the project.
-7. Notes about the group members and their participation, work task division, etc. Here you also may report, if you feel that the points collected to group should be split unevenly among group members. Use percentages when descripting this balancing view point. 
 ```
 
 ### Messaging and fault tolerance
