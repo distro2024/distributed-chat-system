@@ -1,10 +1,15 @@
 # Distributed Chat System 
 
-Documents required for project evaluation
+Documents required for project evaluation:
 - Work Plan [pdf](./docs/work-plan.pdf) / [md](./docs/work-plan.md)
 - Final report [pdf](./docs/final-report.pdf) / [qmd](./docs/final-report.qmd)
 
 > Note: The final report was written with [quarto](https://quarto.org/) for better markdown-to-pdf support. This affects the reading experience in GitHub markdown format. 
+
+
+## Video demonstration of the system
+
+[Distibuted Chat System](https://helsinkifi-my.sharepoint.com/:v:/g/personal/vaisajuh_ad_helsinki_fi/EZwn-eFB-g5Ko_OXWVBGUS4BmKZBHP22L3Yw1NQCFuj6cw?e=BbRv9M&nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJTdHJlYW1XZWJBcHAiLCJyZWZlcnJhbFZpZXciOiJTaGFyZURpYWxvZy1MaW5rIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXcifX0%3D)
 
 
 ## Running the application
@@ -104,6 +109,10 @@ http://localhost:4002
 ```
 ## Instructions for developers
 
+### Tasks
+
+Tasks are tracked in the [project board](https://github.com/orgs/distro2024/projects/1). All members of the team can freely assign tasks in Backlog or in Ready state to themselves. 
+
 ### Code Quality Tools
 
 This project uses ESLint and Prettier to ensure code quality and consistency. Both are included as dev dependencies in the project.
@@ -135,8 +144,5 @@ The team should write code in a manner that supports unittesting of different fu
 - Code is merged to main with pull requests (PRs). 
 - Each PR requires atleast one approval
 - When you are added as a reviewer, try to review the PR in no more than three days. 
+- Feature-branches should be removed when PR is merged. 
 
-
-## Video demonstration of the system
-
-[Distibuted Chat System](https://helsinkifi-my.sharepoint.com/:v:/g/personal/vaisajuh_ad_helsinki_fi/EZwn-eFB-g5Ko_OXWVBGUS4BmKZBHP22L3Yw1NQCFuj6cw?e=BbRv9M&nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJTdHJlYW1XZWJBcHAiLCJyZWZlcnJhbFZpZXciOiJTaGFyZURpYWxvZy1MaW5rIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXcifX0%3D)
