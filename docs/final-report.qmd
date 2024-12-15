@@ -218,8 +218,9 @@ After the distributed system is initialized and Director is running, the first n
 In this implementation all other nodes send a heartbeat to the Coordinator node at a pseudo-randomized interval between $[T, 2T]$ seconds. When a node does not receive a reponse to two consecutive heartbeats, it initiates an election by sending an election message to all nodes with an id higher than its id. In the prototype ids are UUIDs and the comparison is an ascending String comparison (i.e. $(aaaa < aaab < aabb < \ldots)$). For implementation see method `initiateElection`. 
 
 After initiating the election, the node waits for a specified time (in the prototype three seconds) for responses. Then, if: 
-- no responses arrive, it announces itself as a Coordinator to all the nodes in its node list (see method `determineVotingOutcome`). 
-- atleast one response from a higher Id node arrived, it denounces its candidacy (module-scoped global variable `isCandidate` is set to false). For details see method `handleIncomingVote`.
+
+- no responses arrive, it announces itself as a Coordinator to all the nodes in its node list (see method `determineVotingOutcome`).  
+- atleast one response from a higher Id node arrived, it denounces its candidacy (module-scoped global variable `isCandidate` is set to false). For details see method `handleIncomingVote`.  
 
 Upon receiving an election request, each node initiates its own elections and sends a response `vote` (OK) to the election message (see method `sendElectionResponse`). The idea, as in Bully algorithm, is that the node with the highest id is the only one that should not receive any responses, given that the assumptions set by Garcia-Molina hold (1982). That is, for instance, that no messages are lost during election. 
 
