@@ -17,7 +17,7 @@ format: gfm
 // THIS IS HOW A ToC IS DONE WITH MARKDOWN  
 - [Introduction](#introduction) 
 - [Techincal overview](#techical-overview)  
-  - [Nodes](#nodes-also-known-as-chat-nodes)
+  - [Nodes](#nodes)
   - [Coordinator node](#coordinator-node)  
   - [Node director](#node-director)
   - [Joining group discussion](#joining-group-discussion)
@@ -48,17 +48,18 @@ The purpose of this project is to research distributed chat systems and to imple
 
 The justification for such an implementation is that in today's world, we all live with an ever-growing digital footprint. At the same time, many of us have a need for private communication. Most social media services maintain communication history, making it difficult to clear previous discussions. This project introduces an approach in which each discussion is transient by default, promoting a new type of real-time, text-based communication.
 
+The prototype implements the following key functionalities:
+- a single chat room for group discussion
+- node discovery through a central director node
+- eventually consistent chat messaging
+- coordinator election with tailored implementation of Bully algorithm
+- coordinator tasks to onboard new nodes and to keep the list of active nodes up to date
+
+This report first reviews the functionalities implemented in the prototype. After this, some key steps to needed to proceed from a prototype to a MVP (minimum viable product) are discussed. The report concludes with lessons learned, reflections on group participation, a description of how LLMs (large language models) were used during the project and a short reference list. 
+
 {{< pagebreak >}}
 
 ## Techical overview
-
-```
-FROM FINAL REPORT INSTRUCTION:
-2. The design principles (architecture, process, communication) techniques.
-  - This is typically the main part of the report, because it documents the system design and maps it with the source code
-3. What functionalities and how does your system provide? For instance, naming and node discovery, consistency and synchronization, fault tolerance and recovery, etc? For instance, fault tolerance and consensus when a node goes down. 
-```
-
 
 The system under design provides a chat application for end users. When users launch the application to initiate a chat discussion, the client application becomes one of the **chat-nodes** (later nodes) in the distributed chat system. The system includes a **node director** responsible for connecting nodes to each other. In this proof-of-concept version all nodes participate in the same discussion.
 
@@ -68,9 +69,20 @@ Terminology:
 
 ![Basic case](./img/basic_case.png){#fig-basecase}
 
-### Nodes, also known as Chat nodes
+### System architecture
 
-Each node participating in the discussion is a chat-node. Nodes have an identical structure and should share an identical state of the discussion and of nodes in the network. 
+The architecture of this Distributed Chat System is centered around a network of nodes, each representing a client participating in the discussion. These nodes communicate directly with each other, forming a decentralized and fault-tolerant approach. One key component is the coordinator node, responsible for onboarding new nodes, maintaining an up-to-date list of active nodes. The system also incorporates a director node, which acts as a central point for node discovery, connecting new nodes with the current coordinator node. This architecture prioritizes providing users an experience of real-time interaction, employing websockets for node-to-node communication. The system is designed to be transient, meaning that chat discussions are not persistently stored and disappear when all nodes leave the communication. 
+
+The prototype provides distributed system transparency on some key areas (Steen & Tanenbaum 2024, 11):
+- **location transparency:** the user is unaware of the physical locations of other nodes participating in the chat. The system hides this and provides an appearance of a single chat room
+- **coordinator node management:** the selection, monitoring and eventual replacement of coordinator are all handled by the system. The users are unaware of which node (or if their node) serves currently as the coordinator. 
+- **message routing:** the system uses web sockets and HTTP to pass messages between nodes and ensures the eventual consistency of the chat messages. These details are hidden from the end user to enable them to simply focus on sending messages without being conserned about the actual implementation of messaging.  
+- **node failure and system recovery:** the system is designed to handle node failure gracefully. If required, an election to choose a new coordinator. Additionally the coordiantor removes unresponsive nodes from the discussion. 
+
+
+### Nodes
+
+Each node (aka chat-node) participating in the discussion is a chat-node. Nodes have an identical structure and should share an identical state of the discussion and of nodes in the network. 
 
 #### Node state 
 
