@@ -14,30 +14,31 @@ format: gfm
 {{< pagebreak >}}
 
 ## Table of Contents 
-// THIS IS HOW A ToC IS DONE WITH MARKDOWN  
-- [Introduction](#introduction) 
-- [Techincal overview](#techical-overview)  
-  - [Nodes](#nodes)
-  - [Coordinator node](#coordinator-node)  
-  - [Node director](#node-director)
-  - [Joining group discussion](#joining-group-discussion)
-  - [Coordinator election](#coordinator-election)  
-  - [Sending and receiving messages](#sending-and-receiving-messages)
-  - [Eventual Consistency in Discussion](#eventual-consistency-in-discussion)
-  - [Security](#security)
-- [From prototype to MVP](#from-prototype-to-mvp)
-  - [Election process](#election-process)
-  - [Scaling](#scaling)
-- [Lessons learned](#lessons-learned)
-- [Group participation](#group-participation)  
-- [Use of LLMs](#use-of-llms)  
-- [References](#references)
+
+1. [Introduction](#introduction)
+2. [Techincal overview](#techical-overview)
+    i. [System architecture](#system-architecture)
+    ii. [Nodes](#nodes)
+    iii. [Coordinator node](#coordinator-node)
+    iv. [Node director](#node-director)
+    v. [Joining group discussion](#joining-group-discussion)
+    vi. [Coordinator election](#coordinator-election)
+    vii. [Sending and receiving messages](#sending-and-receiving-messages)
+    viii. [Eventual Consistency in Discussion](#eventual-consistency-in-discussion)
+    ix. [Security](#security)
+3. [From prototype to MVP](#from-prototype-to-mvp)
+    i. [Election process](#election-process)
+    ii. [Scaling](#scaling)
+4. [Lessons learned](#lessons-learned)
+5. [Group participation](#group-participation)
+6. [Use of LLMs](#use-of-llms)
+7. [References](#references)
 
 {{< pagebreak >}}
 
 // MAYBE NEW PAGE FOR ALL LEVEL TWO (##) SECTIONS?
 
-## Introduction
+## 1. Introduction
 
 ```
 FROM FINAL REPORT INSTRUCTION:
@@ -59,7 +60,7 @@ This report first reviews the functionalities implemented in the prototype. Afte
 
 {{< pagebreak >}}
 
-## Techical overview
+## 2. Techical overview
 
 The system under design provides a chat application for end users. When users launch the application to initiate a chat discussion, the client application becomes one of the **chat-nodes** (later nodes) in the distributed chat system. The system includes a **node director** responsible for connecting nodes to each other. In this proof-of-concept version all nodes participate in the same discussion.
 
@@ -263,7 +264,6 @@ Nodes respond to an election request by emitting a request to the sender of elec
     "nodeId": "uuid"
 }
 ```
-{{< pagebreak >}}
 
 The node with the highest id will not receive any vote requests, and determines it to be the new Coordinator. It then notifies other nodes that they are the new coordinator by emitting their id to route `/update-coordinator`
 ```json
@@ -330,23 +330,21 @@ Our prototype prioritizes secure communication. When connecting nodes, use **wss
 * **Additional note on security measures**
     - When choosing the appropriate dependency for a certain use case, the necessary precautions should always be taken and it should be ensured that chosen dependencies are from trusted sources.
 
-{{< pagebreak >}}
-
 ### Language selection
 
-The chat nodes and the node director will be implemented using Node.js. Node.js has a strong reputation in handling asynchronous calls, which the team considers to be a critical functionality for the system under design. 
+The chat nodes and the node director have been implemented using Node.js. Node.js has a strong reputation in handling asynchronous calls, which the team considers to be a critical functionality for the system under design. 
 
 ### No persistent storage
 
-As the motivation is to built a system for group discussions without any persistent memory, no database is necessary for this proof-of-concept. Once all client applications shut down, the discussion is lost forever.
+As the motivation is to built a system for group discussions without any persistent memory, no database is necessary for this prototype proof-of-concept (PoC). Once all client applications shut down, the discussion is permanently lost.
 
 ### Container technology
 
-All nodes will reside within containers, which may or may not be located on the same physical machine. This containerized approach ensures flexibility, scalability, and ease of deployment across different environments.
+All nodes may also reside within containers, which may or may not be located on the same physical machine. This containerized approach ensures flexibility, scalability, and ease of deployment across different environments. The protype provides a demonstration of Docker compose implementation. The system can also be used without containers. For instructions, review the README.md. 
 
 {{< pagebreak >}}
 
-## From prototype to MVP
+## 3. From prototype to MVP
 
 ```
 FINAL REPORT INSTRUCTION
@@ -405,14 +403,14 @@ By systematically testing different frequency values and measuring their impact 
 
 {{< pagebreak >}}
 
-## Lessons learned
+## 4. Lessons learned
 
 Working on this small prototype gave the participants an opportunity to study hands-on some course concepts. The team had at least one meeting each week, during which we discussed the themes related both to the group project and to the course in general. During the process the team got a glimpse into the challenges that manifest when designing a Distributed System.  
 
 The scope of this project was quite limited and a lot of constraints had to be placed on which functionalities to implement. As a team we are in consensus in considering our prototype to be a good and coherent demonstration of some key features that would exists in some form in an actual distributed chat system. In it's constrained scale the system is functional and provides selected core features required from a Distributed Chat System. 
 
 
-## Group participation
+## 5. Group participation
 
 ```
 FINAL REPORT INSTRUCTION
@@ -427,14 +425,14 @@ FINAL REPORT INSTRUCTION
 
 The team maintains active communication through a group discussion on Telegram. Each weekend, they hold an online call to plan the upcoming week and discuss any current issues. Work items are coordinated using a Kanban-style project board on GitHub, where tasks are tracked as issues. This approach helps the team better estimate workloads, coordinate active tasks, and plan the project's timeline effectively.
 
-## Use of LLMs 
+## 6. Use of LLMs 
 
 University of Helsinki Large Language Model Curre, Microsoft Co-pilot and Chat-GPT have been used to help improve the grammar of the documentation and to polish the text. Separate LLMs have been prompted to provide feedback on text and to suggest improvements. The response has then been evaualuated and with consideration applied to improve the text. 
 
 
 {{< pagebreak >}}
 
-## References
+## 7. References
 
 Garcia-Molina H. 1982. Elections in a Distributed Computing System. IEEE Transactions on Computers, 31(1):48–59, Jan. 1982.
 
