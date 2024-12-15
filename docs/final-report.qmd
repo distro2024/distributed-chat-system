@@ -11,7 +11,7 @@ numbersections: true
 **Members:** Juha Väisänen, Pekka Prökkinen, Ville Hänninen, Heidi Holappa  
 **Group number:** 9  
 
-![Image of the Distributed Chat System with a Node Director, a Coordinator, and Chat Nodes. A new Chat Node is contacting the Director to join the network and the Node Director is passing its information to the Coordinator. The Coordinator is sending a heartbeat to the Node Director. Chat Nodes are sending a heartbeat to the Coordinator. One Chat Node is sending a new chat message to other Chat Nodes.](./img/cover-image.jpg)
+![A snapshot of the Distributed Chat System with a Node Director, a Coordinator, and Chat Nodes. A new Chat Node is contacting the Director to join the network and the Node Director is passing its information to the Coordinator. The Coordinator is sending a heartbeat to the Node Director. Chat Nodes are sending a heartbeat to the Coordinator. One Chat Node is sending a new chat message to other Chat Nodes.](./img/cover-image.jpg)
 
 {{< pagebreak >}}
 
