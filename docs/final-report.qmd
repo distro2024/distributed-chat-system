@@ -185,7 +185,7 @@ POST `/join_chat`: Handles requests to join the chat. Both the request and respo
 }
 ```
 
-In the request payload, the nodeId and nodeAddress represent the joining chat node's ID and address. In the response payload, these fields represent the current coordinator's ID and address. If the joining chat node is the first node in the chat, the response payload contains its own details.// MAYBE NEW PAGE FOR ALL LEVEL TWO (##) SECTIONS?
+In the request payload, the nodeId and nodeAddress represent the joining chat node's ID and address. In the response payload, these fields represent the current coordinator's ID and address. If the joining chat node is the first node in the chat, the response payload contains its own details.
 
 POST `/update_coordinator`: Updates the information about the current coordinator in the chat. Both the request and response payloads follow the same structure as above.
 
