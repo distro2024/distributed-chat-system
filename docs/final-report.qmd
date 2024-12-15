@@ -59,7 +59,11 @@ The prototype implements the following key functionalities:
 
 This report first reviews the functionalities implemented in the prototype. After this, some key steps to needed to proceed from a prototype to an MVP (minimum viable product) are discussed. The report concludes with lessons learned, reflections on group participation, a description of how LLMs (large language models) were used during the project and a short reference list. 
 
-The project's remote repository (with source code and documentation) can be found at Github: [https://github.com/distro2024/distributed-chat-system](https://github.com/distro2024/distributed-chat-system)  
+The project's remote repository (with source code and documentation) can be found at Github: [https://github.com/distro2024/distributed-chat-system](https://github.com/distro2024/distributed-chat-system)   
+
+Video demonstration of the system can be found [here](https://helsinkifi-my.sharepoint.com/:v:/g/personal/vaisajuh_ad_helsinki_fi/EZwn-eFB-g5Ko_OXWVBGUS4BmKZBHP22L3Yw1NQCFuj6cw?e=BbRv9M&nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJTdHJlYW1XZWJBcHAiLCJyZWZlcnJhbFZpZXciOiJTaGFyZURpYWxvZy1MaW5rIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXcifX0%3D)
+
+> Note: accessing the video requires a University of Helsinki account. If you have trouble accessing the video, please don't hesitate to contact any of the group members. 
 
 {{< pagebreak >}}
 
@@ -424,18 +428,11 @@ The scope of this project was quite limited and a lot of constraints had to be p
 
 # Group participation
 
-```
-FINAL REPORT INSTRUCTION
-7. Notes about the group members and their participation, work task division, etc. Here you also may report, if you feel that the points collected to group should be split unevenly among group members. Use percentages when descripting this balancing view point. 
-```
+The team maintained active communication through a group discussion on Telegram. The team held an online call one or several times per week to plan the upcoming tasks and discuss any current issues. Work items were coordinated using a Kanban-style project board on GitHub, where tasks were tracked as issues. The board can be found from GitHub. This approach helped the team better estimate workloads, coordinate active tasks, and plan the project's timeline effectively.  
 
-- How did everyone participate
-- How did we work
-  - meetings
-  - how we kept in touch
-  - pair coding etc. 
+Pair coding was used to tackle some challenging feature development tasks, such as major refactoring of code or fixing challening bugs.  
 
-The team maintains active communication through a group discussion on Telegram. Each weekend, they hold an online call to plan the upcoming week and discuss any current issues. Work items are coordinated using a Kanban-style project board on GitHub, where tasks are tracked as issues. This approach helps the team better estimate workloads, coordinate active tasks, and plan the project's timeline effectively.
+All group members participated in all activities, that is in writing code, group discussion in telegram and in writing project documentation.  
 
 # Use of LLMs 
 
