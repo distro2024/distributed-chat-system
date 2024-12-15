@@ -36,6 +36,7 @@ numbersections: true
     v. [Election process](#election-process)
     vi. [Improving fault tolerance](#improving-fault-tolerance)
     vii. [Benchmarking](#benchmarking)
+    viii. [Performance](#performance)
 4. [Lessons learned](#lessons-learned)
 5. [Group participation](#group-participation)
 6. [Use of LLMs](#use-of-llms)
@@ -413,6 +414,12 @@ The system has has been demonstrated to function with four nodes. For an MVP, th
 The heartbeat frequencies and coordinator task frequencies, such as the frequency of removing zombie nodes, should also be benchmarked and optimized. Benchmarking will play a crucial role in determining the optimal frequencies for these tasks.  
 
 By systematically testing different frequency values and measuring their impact on system performance, developers can identify the settings that strike the best balance between responsiveness, resource consumption, and fault tolerance. Without benchmarking, arbitrarily set values might lead to either excessive overhead from frequent tasks or delayed responses due to infrequent checks, or failures due to unsufficient exception handling and verification.  
+
+## Performance
+
+The performance is significantly affected by the number of nodes. While the system can handle a small number of nodes adequately, increasing the number of nodes substantially leads to added network and processing load due to broadcast-type message distribution, node-to-node coordination, sharing of historical data, and the election process. Latency grows in line with increasing network latency and the degree of network distribution.
+
+This problem could be addressed, for example, by forming clusters or using intermediary servers, ensuring that not all nodes communicate directly with every other node.
 
 {{< pagebreak >}}
 
