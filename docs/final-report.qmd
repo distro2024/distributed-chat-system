@@ -406,6 +406,8 @@ In the current implementation, there is only one Director node. Therefore, if it
 
 The report outlines, that simple messaging was used to demonstrate key features of a Distributed Chat System. For example, heartbeats were sent as HTTP requests without fine-grained response handling. Neither the communication with web sockets or with HTTP was benchmarked. For a Minimum Viable Product (MVP), a more mature level of communication exception handling and verificatoin is necessary. To achieve this, benchmarking is essential for an MVP to evaluate performance and optimize key parameters.  
 
+The system has has been demonstrated to function with four nodes. For an MVP, the scalability should also be benchmarked to find limitations for the maximum number of nodes the system can support in a single discussion.  One possible bottleneck will be the leader election, which will create more overhead as the network grows in size. 
+
 The heartbeat frequencies and coordinator task frequencies, such as the frequency of removing zombie nodes, should also be benchmarked and optimized. Benchmarking will play a crucial role in determining the optimal frequencies for these tasks.  
 
 By systematically testing different frequency values and measuring their impact on system performance, developers can identify the settings that strike the best balance between responsiveness, resource consumption, and fault tolerance. Without benchmarking, arbitrarily set values might lead to either excessive overhead from frequent tasks or delayed responses due to infrequent checks, or failures due to unsufficient exception handling and verification.  
