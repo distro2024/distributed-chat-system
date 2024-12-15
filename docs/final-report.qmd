@@ -44,8 +44,6 @@ numbersections: true
 
 {{< pagebreak >}}
 
-// MAYBE NEW PAGE FOR ALL LEVEL TWO (##) SECTIONS?
-
 # Introduction
 
 The purpose of this project is to research distributed chat systems and to implement a working prototype. As a novel approach, this system does not contain persistent storage. Instead, chat discussions are transient, like phone calls, and remain active only until all nodes leave the communication. At that point, the discussion is gone and cannot be retrieved.
@@ -70,7 +68,8 @@ The project's remote repository (with source code and documentation) can be foun
 The system under design provides a chat application for end users. When users launch the application to initiate a chat discussion, the client application becomes one of the **chat-nodes** (later nodes) in the distributed chat system. The system includes a **node director** responsible for connecting nodes to each other. In this proof-of-concept version all nodes participate in the same discussion.
 
 Terminology:  
-- **node:** chat-node sends and receives messages from other chat-nodes. Chat-node can also serve as a coordinator for other chat-nodes (detailed later in the document)
+
+- **node:** chat-node sends and receives messages from other chat-nodes. Chat-node can also serve as a coordinator for other chat-nodes (detailed later in the document)  
 - **node director:** node director connects new chat-nodes into the group discussion. Node director does not participate in chat discussion, but communicates with the coordinator node (detailed later in the document)
 
 ![Basic case](./img/basic_case.png){#fig-basecase}
@@ -80,10 +79,11 @@ Terminology:
 The architecture of this Distributed Chat System is centered around a network of nodes, each representing a client participating in the discussion. These nodes communicate directly with each other, forming a decentralized and fault-tolerant approach. One key component is the coordinator node, responsible for onboarding new nodes, maintaining an up-to-date list of active nodes. The system also incorporates a director node, which acts as a central point for node discovery, connecting new nodes with the current coordinator node. This architecture prioritizes providing users an experience of real-time interaction, employing websockets for node-to-node communication. The system is designed to be transient, meaning that chat discussions are not persistently stored and disappear when all nodes leave the communication. 
 
 The prototype provides distributed system transparency on some key areas (Steen & Tanenbaum 2024, 11):
-- **location transparency:** the user is unaware of the physical locations of other nodes participating in the chat. The system hides this and provides an appearance of a single chat room
-- **coordinator node management:** the selection, monitoring and eventual replacement of coordinator are all handled by the system. The users are unaware of which node (or if their node) serves currently as the coordinator. 
+
+- **location transparency:** the user is unaware of the physical locations of other nodes participating in the chat. The system hides this and provides an appearance of a single chat room  
+- **coordinator node management:** the selection, monitoring and eventual replacement of coordinator are all handled by the system. The users are unaware of which node (or if their node) serves currently as the coordinator.  
 - **message routing:** the system uses web sockets and HTTP to pass messages between nodes and ensures the eventual consistency of the chat messages. These details are hidden from the end user to enable them to simply focus on sending messages without being conserned about the actual implementation of messaging.  
-- **node failure and system recovery:** the system is designed to handle node failure gracefully. If required, an election to choose a new coordinator. Additionally the coordiantor removes unresponsive nodes from the discussion. 
+- **node failure and system recovery:** the system is designed to handle node failure gracefully. If required, an election to choose a new coordinator. Additionally the coordiantor removes unresponsive nodes from the discussion.  
 
 
 ## Nodes
@@ -122,6 +122,8 @@ Each node should also share an identical state of the chat-discussion. This func
 The coordinator node is an elected role responsible for onboarding new nodes into the chat and maintaining an up-to-date record of the nodes participating in the discussion. During the onboarding process, the new chat node receives a list of its neighbours and the existing chat history. This list of neighbours is updated and sent to all chat nodes whenever a new node joins the chat. Each chat always has one coordinator node, and if the current coordinator fails, the remaining nodes initiate an election process to select a new one. Thus, any node is eligible to become the coordinator at any point during the chat. See [coordinator election](#coordinator-election) section for more spesific details of the election.
 
 The coordinator node sends heartbeats to the director node, allowing the director to identify the current coordinator for each chat and to direct new nodes to the appropriate chat. Similarly, chat nodes send heartbeats to the coordinator node, enabling it to monitor which nodes are active and participating in the chat. If the coordinator does not receive a heartbeat from a node, it runs a regular task to identify and remove potential zombie nodes from the list.
+
+{{< pagebreak >}}
 
 The coordinator node has two endpoints:
 
@@ -183,7 +185,7 @@ POST `/join_chat`: Handles requests to join the chat. Both the request and respo
 }
 ```
 
-In the request payload, the nodeId and nodeAddress represent the joining chat node's ID and address. In the response payload, these fields represent the current coordinator's ID and address. If the joining chat node is the first node in the chat, the response payload contains its own details.
+In the request payload, the nodeId and nodeAddress represent the joining chat node's ID and address. In the response payload, these fields represent the current coordinator's ID and address. If the joining chat node is the first node in the chat, the response payload contains its own details.// MAYBE NEW PAGE FOR ALL LEVEL TWO (##) SECTIONS?
 
 POST `/update_coordinator`: Updates the information about the current coordinator in the chat. Both the request and response payloads follow the same structure as above.
 
@@ -349,13 +351,7 @@ All nodes may also reside within containers, which may or may not be located on 
 
 {{< pagebreak >}}
 
-# 3. From prototype to MVP
-
-```
-FINAL REPORT INSTRUCTION
-4. How do you show that your system can scale to support the increased number of nodes?
-5. How do you quantify the performance of the system and what did you do (can do) to improve the performance of the system (for instance reduce the latency or improve the throughput)?
-```
+# From prototype to MVP
 
 ##  Potential applications of the project 
 
