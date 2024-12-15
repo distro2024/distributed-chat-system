@@ -361,7 +361,9 @@ FINAL REPORT INSTRUCTION
 
 ##  Potential applications of the project 
 
-This project provides a foundation for building diverse applications that demand real-time communication capabilities. Its potential extends to social media platforms, collaborative tools, and specialized services like emergency response and IoT systems—any application where speed, scale, and reliability in messaging are critical can leverage this technology.
+This project provides a foundation for building diverse applications that demand real-time communication capabilities. Its potential extends to social media platforms, collaborative tools, and specialized services like emergency response and IoT systems—any application where speed, scale, and reliability in messaging are critical can leverage this technology.  
+
+This simple prototype demonstrates some key functionalities in the scope of one shared group discussion. In an MVP the system should provide multiple discussions and provide the end-users the control to select, which discussion they participate in (or to create a new discussion room).
 
 ## Scaling
 
