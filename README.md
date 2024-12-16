@@ -22,11 +22,11 @@ For development of this application the following versions have been used:
 - docker-compose: `2.30.1` 
 - docker: `27.4.0`
 
-Older versions of these applications are not guaranteed to work.
+Older versions of these tools are not guaranteed to work.
 
 ### Installation
 
-Start by cloning the application from the default branch (main) of the GitHub -repository with `git clone`.
+Start by cloning the code from the default branch (main) with `git clone`.
 
 The application has two modules: `director` and `node`. For each of these you need to install required dependencies. Alternatively, you can use Docker Compose if you want to [test this in containers](#running-with-docker).
 
